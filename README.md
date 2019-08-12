@@ -1,4 +1,4 @@
-# Kolide Fleet [![CircleCI](https://circleci.com/gh/kolide/fleet/tree/master.svg?style=svg)](https://circleci.com/gh/kolide/fleet/tree/master)
+# #Kolide Fleet [![CircleCI](https://circleci.com/gh/kolide/fleet/tree/master.svg?style=svg)](https://circleci.com/gh/kolide/fleet/tree/master)
 
 ### Effective Endpoint Security. At Any Scale.
 
