@@ -13,6 +13,7 @@ import (
 func (d *Datastore) NewHost(host *kolide.Host) (*kolide.Host, error) {
 	sqlStatement := `
 	INSERT INTO hosts (
+		uid,
 		osquery_host_id,
 		detail_update_time,
 		node_key,
@@ -25,9 +26,9 @@ func (d *Datastore) NewHost(host *kolide.Host) (*kolide.Host, error) {
 		physical_memory,
 		seen_time
 	)
-	VALUES( ?,?,?,?,?,?,?,?,?,?,? )
+	VALUES( ?,?,?,?,?,?,?,?,?,?,?,? )
 	`
-	result, err := d.db.Exec(sqlStatement, host.OsqueryHostID, host.DetailUpdateTime,
+	result, err := d.db.Exec(sqlStatement, host.Uid, host.OsqueryHostID, host.DetailUpdateTime,
 		host.NodeKey, host.HostName, host.UUID, host.Platform, host.OsqueryVersion,
 		host.OSVersion, host.Uptime, host.PhysicalMemory, host.SeenTime)
 	if err != nil {
@@ -145,6 +146,7 @@ func updateNicsForHost(tx *sqlx.Tx, host *kolide.Host) ([]*kolide.NetworkInterfa
 func (d *Datastore) SaveHost(host *kolide.Host) error {
 	sqlStatement := `
 		UPDATE hosts SET
+		    uid = ?,
 			detail_update_time = ?,
 			node_key = ?,
 			host_name = ?,
@@ -181,6 +183,7 @@ func (d *Datastore) SaveHost(host *kolide.Host) error {
 	}
 
 	results, err := tx.Exec(sqlStatement,
+		host.Uid,
 		host.DetailUpdateTime,
 		host.NodeKey,
 		host.HostName,
@@ -312,6 +315,23 @@ func (d *Datastore) ListHosts(opt kolide.ListOptions) ([]*kolide.Host, error) {
 		if err := d.getNetInterfacesForHosts(hosts); err != nil {
 			return nil, err
 		}
+	}
+
+	return hosts, nil
+}
+
+func (d *Datastore) ListEbiHosts(uid string) ([]*kolide.Host, error) {
+	sqlStatement := `
+		SELECT * FROM hosts
+		WHERE NOT deleted AND uid=?
+	`
+	hosts := []*kolide.Host{}
+	if err := d.db.Select(&hosts, sqlStatement, uid); err != nil {
+		return nil, errors.Wrap(err, "list ebi hosts")
+	}
+
+	if err := d.getNetInterfacesForAllHosts(hosts); err != nil {
+		return nil, err
 	}
 
 	return hosts, nil

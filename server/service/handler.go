@@ -96,6 +96,10 @@ type KolideEndpoints struct {
 	SSOSettings                           endpoint.Endpoint
 	GetFIM                                endpoint.Endpoint
 	ModifyFIM                             endpoint.Endpoint
+	SubmitCampaigns                       endpoint.Endpoint
+	ListHostsEbi                          endpoint.Endpoint
+	RiskMetric                            endpoint.Endpoint
+	SetEventStatus                        endpoint.Endpoint
 }
 
 // MakeKolideServerEndpoints creates the Kolide API endpoints.
@@ -194,6 +198,11 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		GetDistributedQueries:         authenticatedHost(svc, makeGetDistributedQueriesEndpoint(svc)),
 		SubmitDistributedQueryResults: authenticatedHost(svc, makeSubmitDistributedQueryResultsEndpoint(svc)),
 		SubmitLogs:                    authenticatedHost(svc, makeSubmitLogsEndpoint(svc)),
+		SubmitCampaigns:               authenticatedHost(svc, makeSubmitCampaignsEndpoint(svc)),
+
+		ListHostsEbi:                  makeListHostsEbiEndpoint(svc),
+		RiskMetric:                    makeRiskMetricEndpoint(svc),
+		SetEventStatus:                makeSetEventStatusEndpoint(svc),
 	}
 }
 
@@ -279,6 +288,10 @@ type kolideHandlers struct {
 	SettingsSSO                           http.Handler
 	ModifyFIM                             http.Handler
 	GetFIM                                http.Handler
+	SubmitCampaigns                       http.Handler
+	ListHostsEbi                          http.Handler
+	RiskMetric                            http.Handler
+	SetEventStatus                        http.Handler
 }
 
 func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *kolideHandlers {
@@ -367,6 +380,11 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		SettingsSSO:                           newServer(e.SSOSettings, decodeNoParamsRequest),
 		ModifyFIM:                             newServer(e.ModifyFIM, decodeModifyFIMRequest),
 		GetFIM:                                newServer(e.GetFIM, decodeNoParamsRequest),
+		SubmitCampaigns:                       newServer(e.SubmitCampaigns, decodeSubmitCampaignsRequest),
+
+		ListHostsEbi:                          newServer(e.ListHostsEbi, decodeListHostsEbiRequest),
+		RiskMetric:                            newServer(e.RiskMetric, decodeRiskMetricRequest),
+		SetEventStatus:                        newServer(e.SetEventStatus, decodeSetEventStatusRequest),
 	}
 }
 
@@ -501,6 +519,11 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/v1/osquery/distributed/read", h.GetDistributedQueries).Methods("POST").Name("get_distributed_queries")
 	r.Handle("/api/v1/osquery/distributed/write", h.SubmitDistributedQueryResults).Methods("POST").Name("submit_distributed_query_results")
 	r.Handle("/api/v1/osquery/log", h.SubmitLogs).Methods("POST").Name("submit_logs")
+	r.Handle("/api/v1/osquery/distributed/campaigns", h.SubmitCampaigns).Methods("POST").Name("submit_campaigns")
+
+	r.Handle("/api/gethosts", h.ListHostsEbi).Methods("GET").Name("list_hosts_ebi")
+	r.Handle("/api/risk_metric", h.RiskMetric).Methods("GET").Name("risk_metric")
+	r.Handle("/api/set_event_status", h.SetEventStatus).Methods("POST").Name("set_event_status")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.

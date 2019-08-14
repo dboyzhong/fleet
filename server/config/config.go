@@ -105,6 +105,11 @@ type FilesystemConfig struct {
 	EnableLogRotation bool   `yaml:"enable_log_rotation"`
 }
 
+type EventConfig struct {
+	JPushID     string `yaml:"jpush_id"`
+	JPushKey    string `yaml:"jpush_key"`
+}
+
 // KolideConfig stores the application configuration. Each subcategory is
 // broken up into it's own struct, defined above. When editing any of these
 // structs, Manager.addConfigs and Manager.LoadConfig should be
@@ -120,7 +125,9 @@ type KolideConfig struct {
 	Logging    LoggingConfig
 	Firehose   FirehoseConfig
 	Filesystem FilesystemConfig
+	Event      EventConfig
 }
+
 
 // addConfigs adds the configuration keys and default values that will be
 // filled into the KolideConfig struct
@@ -228,6 +235,10 @@ func (man Manager) addConfigs() {
 		"Log file path to use for result logs")
 	man.addConfigBool("filesystem.enable_log_rotation", false,
 		"Enable automatic rotation for osquery log files")
+
+	//Event
+	man.addConfigString("event.jpush_id", "", "jpush id")
+	man.addConfigString("event.jpush_key", "", "jpush key")
 }
 
 // LoadConfig will load the config variables into a fully initialized
@@ -298,6 +309,10 @@ func (man Manager) LoadConfig() KolideConfig {
 			StatusLogFile:     man.getConfigString("filesystem.status_log_file"),
 			ResultLogFile:     man.getConfigString("filesystem.result_log_file"),
 			EnableLogRotation: man.getConfigBool("filesystem.enable_log_rotation"),
+		},
+		Event: EventConfig{
+			JPushID:     man.getConfigString("event.jpush_id"),
+			JPushKey:    man.getConfigString("event.jpush_key"),
 		},
 	}
 }

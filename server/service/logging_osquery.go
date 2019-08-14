@@ -140,3 +140,21 @@ func (mw loggingMiddleware) SubmitResultLogs(ctx context.Context, logs []json.Ra
 	err = mw.Service.SubmitResultLogs(ctx, logs)
 	return err
 }
+
+func (mw loggingMiddleware) SubmitResultCampaigns(ctx context.Context, logs []json.RawMessage) error {
+	var (
+		err error
+	)
+
+	defer func(begin time.Time) {
+		_ = mw.logger.Log(
+			"method", "SubmitResultCampaigns",
+			"ip_addr", ctx.Value(kithttp.ContextKeyRequestRemoteAddr).(string),
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	err = mw.Service.SubmitResultCampaigns(ctx, logs)
+	return err
+}

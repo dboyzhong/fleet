@@ -9,6 +9,9 @@ import (
 func (svc service) ListHosts(ctx context.Context, opt kolide.ListOptions) ([]*kolide.Host, error) {
 	return svc.ds.ListHosts(opt)
 }
+func (svc service) ListEbiHosts(ctx context.Context, uid string) ([]*kolide.Host, error) {
+	return svc.ds.ListEbiHosts(uid)
+}
 
 func (svc service) GetHost(ctx context.Context, id uint) (*kolide.Host, error) {
 	return svc.ds.Host(id)

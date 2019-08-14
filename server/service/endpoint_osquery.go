@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	_"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/kolide/fleet/server/kolide"
@@ -167,5 +168,30 @@ func makeSubmitLogsEndpoint(svc kolide.Service) endpoint.Endpoint {
 		}
 
 		return submitLogsResponse{Err: err}, nil
+	}
+}
+
+type submitCampaignsRequest struct {
+	NodeKey string          `json:"node_key"`
+	Data    json.RawMessage `json:"data"`
+}
+
+type submitCampaignsResponse struct {
+	Err error `json:"error,omitempty"`
+}
+
+func (r submitCampaignsResponse) error() error { return r.Err }
+
+func makeSubmitCampaignsEndpoint(svc kolide.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(submitCampaignsRequest)
+		var err error
+		var results []json.RawMessage
+		if err := json.Unmarshal(req.Data, &results); err != nil {
+			err = osqueryError{message: "unmarshalling result logs: " + err.Error()}
+		} else {
+		    err = svc.SubmitResultCampaigns(ctx, results)
+		}
+		return submitCampaignsResponse{Err: err}, nil
 	}
 }

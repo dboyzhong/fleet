@@ -153,8 +153,9 @@ the way that the Fleet server works.
 			redisPool := pubsub.NewRedisPool(config.Redis.Address, config.Redis.Password)
 			resultStore = pubsub.NewRedisQueryResults(redisPool)
 			ssoSessionStore := sso.NewSessionStore(redisPool)
+			bashStore := pubsub.NewBashResults(redisPool)
 
-			svc, err := service.NewService(ds, resultStore, logger, config, mailService, clock.C, ssoSessionStore)
+			svc, err := service.NewService(ds, resultStore, logger, config, mailService, clock.C, ssoSessionStore, bashStore)
 			if err != nil {
 				initFatal(err, "initializing service")
 			}
@@ -185,6 +186,7 @@ the way that the Fleet server works.
 			svcLogger := kitlog.With(logger, "component", "service")
 			svc = service.NewLoggingService(svc, svcLogger)
 			svc = service.NewMetricsService(svc, requestCount, requestLatency)
+			svc = service.NewEventService(svc, ds, logger, config.Event.JPushID, config.Event.JPushKey)
 
 			httpLogger := kitlog.With(logger, "component", "http")
 

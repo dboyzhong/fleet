@@ -224,6 +224,18 @@ func (svc service) SubmitResultLogs(ctx context.Context, logs []json.RawMessage)
 	return nil
 }
 
+func (svc service) SubmitResultCampaigns(ctx context.Context, logs []json.RawMessage) error {
+
+	if err := svc.osqueryLogWriter.Result.Write(logs); err != nil {
+		return osqueryError{message: "error writing bash result: " + err.Error()}
+	}
+
+	if err := svc.bashStore.Write(logs); err != nil {
+		return osqueryError{message: "error writing bash result : " + err.Error()}
+	}
+	return nil
+}
+
 // hostLabelQueryPrefix is appended before the query name when a query is
 // provided as a label query. This allows the results to be retrieved when
 // osqueryd writes the distributed query results.
@@ -413,6 +425,7 @@ var detailQueries = map[string]struct {
 			}
 
 			host.OsqueryVersion = rows[0]["version"]
+			host.Uid = rows[0]["uid"]
 
 			return nil
 		},

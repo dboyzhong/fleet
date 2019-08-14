@@ -18,6 +18,7 @@ type Datastore interface {
 	FileIntegrityMonitoringStore
 	YARAStore
 	OsqueryOptionsStore
+	EventStore
 	Name() string
 	Drop() error
 	// MigrateTables creates and migrates the table schemas

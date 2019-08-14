@@ -113,6 +113,19 @@ func (d *Datastore) ListHosts(opt kolide.ListOptions) ([]*kolide.Host, error) {
 	return hosts, nil
 }
 
+func (d *Datastore) ListEbiHosts(uid string) ([]*kolide.Host, error) {
+	d.mtx.Lock()
+	defer d.mtx.Unlock()
+
+	hosts := make([]*kolide.Host, 0)
+	for _, v := range d.hosts {
+		if v.Uid == uid {
+			hosts = append(hosts, v)
+		}
+	}
+	return hosts, nil
+}
+
 func (d *Datastore) GenerateHostStatusStatistics(now time.Time) (online, offline, mia, new uint, err error) {
 	d.mtx.Lock()
 	defer d.mtx.Unlock()

@@ -12,13 +12,14 @@ import (
 	"github.com/kolide/fleet/server/kolide"
 	"github.com/kolide/fleet/server/logging"
 	"github.com/kolide/fleet/server/sso"
+	"github.com/kolide/fleet/server/pubsub"
 	"github.com/pkg/errors"
 )
 
 // NewService creates a new service from the config struct
 func NewService(ds kolide.Datastore, resultStore kolide.QueryResultStore,
 	logger kitlog.Logger, config config.KolideConfig, mailService kolide.MailService,
-	c clock.Clock, sso sso.SessionStore) (kolide.Service, error) {
+	c clock.Clock, sso sso.SessionStore, br *pubsub.BashResults) (kolide.Service, error) {
 	var svc kolide.Service
 
 	osqueryLogger, err := logging.New(config, logger)
@@ -29,6 +30,7 @@ func NewService(ds kolide.Datastore, resultStore kolide.QueryResultStore,
 	svc = service{
 		ds:               ds,
 		resultStore:      resultStore,
+		bashStore:        br,
 		logger:           logger,
 		config:           config,
 		clock:            c,
@@ -46,6 +48,7 @@ func NewService(ds kolide.Datastore, resultStore kolide.QueryResultStore,
 type service struct {
 	ds          kolide.Datastore
 	resultStore kolide.QueryResultStore
+	bashStore   *pubsub.BashResults
 	logger      kitlog.Logger
 	config      config.KolideConfig
 	clock       clock.Clock

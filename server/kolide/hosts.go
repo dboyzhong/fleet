@@ -38,6 +38,7 @@ type HostStore interface {
 	DeleteHost(hid uint) error
 	Host(id uint) (*Host, error)
 	ListHosts(opt ListOptions) ([]*Host, error)
+	ListEbiHosts(uid string) ([]*Host, error)
 	EnrollHost(osqueryHostId string, nodeKeySize int) (*Host, error)
 	AuthenticateHost(nodeKey string) (*Host, error)
 	MarkHostSeen(host *Host, t time.Time) error
@@ -63,6 +64,7 @@ type HostStore interface {
 
 type HostService interface {
 	ListHosts(ctx context.Context, opt ListOptions) (hosts []*Host, err error)
+	ListEbiHosts(ctx context.Context, uid string) (hosts []*Host, err error)
 	GetHost(ctx context.Context, id uint) (host *Host, err error)
 	GetHostSummary(ctx context.Context) (summary *HostSummary, err error)
 	DeleteHost(ctx context.Context, id uint) (err error)
@@ -72,6 +74,7 @@ type Host struct {
 	UpdateCreateTimestamps
 	DeleteFields
 	ID uint `json:"id"`
+	Uid string `json:"uid"`
 	// OsqueryHostID is the key used in the request context that is
 	// used to retrieve host information.  It is sent from osquery and may currently be
 	// a GUID or a Host Name, but in either case, it MUST be unique

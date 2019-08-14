@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	_"bytes"
 
 	"github.com/pkg/errors"
 )
@@ -23,6 +24,10 @@ func (c *Client) GetHosts() ([]hostResponse, error) {
 		)
 	}
 	var responseBody listHostsResponse
+	//buf := new(bytes.Buffer)
+ //   buf.ReadFrom(response.Body)
+	//s := buf.String()
+	//println(s)
 	err = json.NewDecoder(response.Body).Decode(&responseBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "decode list hosts response")

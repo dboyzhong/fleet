@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	_"fmt"
+	_"bytes"
 
 	"github.com/kolide/fleet/server/kolide"
 	"github.com/pkg/errors"
@@ -13,6 +15,11 @@ import (
 
 func decodeEnrollAgentRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var req enrollAgentRequest
+	//buf := new(bytes.Buffer)
+ //   buf.ReadFrom(r.Body)
+ //   s := buf.String()
+	
+	//fmt.Printf("---->%s\n", s)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
@@ -114,6 +121,25 @@ func decodeSubmitLogsRequest(ctx context.Context, r *http.Request) (interface{},
 	}
 
 	var req submitLogsRequest
+	if err = json.NewDecoder(body).Decode(&req); err != nil {
+		return nil, errors.Wrap(err, "decoding JSON")
+	}
+	defer r.Body.Close()
+
+	return req, nil
+}
+
+func decodeSubmitCampaignsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var err error
+	body := r.Body
+	if r.Header.Get("content-encoding") == "gzip" {
+		body, err = gzip.NewReader(body)
+		if err != nil {
+			return nil, errors.Wrap(err, "decoding gzip")
+		}
+		defer body.Close()
+	}
+	var req submitCampaignsRequest
 	if err = json.NewDecoder(body).Decode(&req); err != nil {
 		return nil, errors.Wrap(err, "decoding JSON")
 	}
