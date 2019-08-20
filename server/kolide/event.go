@@ -30,15 +30,32 @@ type Alarm struct {
 	DataDB   string       `json:"-" db:"alarm"`
 }
 
+type EventHistory struct {
+	Uid      string       `json:"uid"      db:"uid"`
+	Platform string       `json:"platform" db:"platform"`
+	Hostname string       `json:"hostname" db:"hostname"`
+	Level int             `json:"level"    db:"-"`
+	EventId string        `json:"event_id" db:"-"`
+	Title string          `json:"title"    db:"-"`
+	Type int              `json:"type"     db:"-"`
+	CreateTime time.Time  `json:"create_time" db:"-"`
+	Ip string             `json:"ip"       db:"-"`
+	IOC string            `json:"ioc"      db:"-"`
+	Details string        `json:"details"  db:"-"`
+	DataDB   string       `json:"-"        db:"alarm"`
+}
+
 
 type EventStore interface {
 	NewEvent(uid, eventId, platform, hostname string, content, alarm string, status int) error
 	GetRiskMetric(uid string) (*RiskMetric, error)
 	SetEventStatus(uid, eventId string, status int) (string, error)
 	GetAlarm(status int) ([]*Alarm, error)
+	EventHistory(uid, sort string, start, end int64) ([]*EventHistory, error)
 }
 
 type EventService interface {
 	GetRiskMetric(ctx context.Context, uid string) (*RiskMetric, error)
 	SetEventStatus(ctx context.Context, uid, eventId string, status int) (string, error)
+	EventHistory(ctx context.Context, uid, sort string, start, end int64) ([]*EventHistory, error)
 }

@@ -28,6 +28,18 @@ type setEventStatusResponse struct {
 	Err    error  `json:"error,omitempty"`
 }
 
+type eventHistoryRequest struct {
+	Uid   string `json:"uid"`
+	Sort  string `json:"sort"`
+	Start int64  `json:"start"`
+	End   int64  `json:"end"` 
+}
+
+type eventHistoryResponse struct {
+	History []*kolide.EventHistory   `json:"event_history"`
+	Err         error              `json:"error,omitempty"`
+}
+
 func (r riskMetricResponse) error() error { return r.Err }
 
 func makeRiskMetricEndpoint(svc kolide.Service) endpoint.Endpoint {
@@ -49,5 +61,16 @@ func makeSetEventStatusEndpoint(svc kolide.Service) endpoint.Endpoint {
 			return setEventStatusResponse{Err: err}, nil
 		}
 		return setEventStatusResponse{Result: result, Err:nil}, nil
+	}
+}
+
+func makeEventHistoryEndpoint(svc kolide.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(eventHistoryRequest)
+		result, err := svc.EventHistory(ctx, req.Uid, req.Sort, req.Start, req.End)
+		if err != nil {
+			return eventHistoryResponse{Err: err}, nil
+		}
+		return eventHistoryResponse{History: result, Err:nil}, nil
 	}
 }

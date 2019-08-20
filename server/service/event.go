@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"encoding/binary"
 	"crypto/md5"
+	"strconv"
 )
 
 type rulesEngine struct {
@@ -178,6 +179,24 @@ func decodeSetEventStatusRequest(ctx context.Context, r *http.Request) (interfac
 	defer r.Body.Close()
 
 	return req, nil
+}
+
+func decodeEventHistoryRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	uid   := r.URL.Query().Get("uid")
+	sort  := r.URL.Query().Get("sort")
+	var start, end int64
+	var err error
+
+
+	if start, err = strconv.ParseInt(r.URL.Query().Get("start"),10,64); err != nil {
+		return nil, errors.New("param error")
+	}
+
+	if end, err = strconv.ParseInt(r.URL.Query().Get("end"),10,64); err != nil {
+		return nil, errors.New("param error")
+	}
+
+	return eventHistoryRequest{Uid: uid, Sort: sort, Start: start, End: end}, nil
 }
 
 func (ew eventMiddleware) AlarmRoutine() {
