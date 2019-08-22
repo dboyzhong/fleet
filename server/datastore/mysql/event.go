@@ -80,7 +80,7 @@ func (d* Datastore) EventHistory(uid, sort string, start, end int64) ([]*kolide.
 	    `
 	} else {
 	    sqlStatement = `
-	    	SELECT uid, platform, hostname, alarm FROM event 
+	    	SELECT uid, platform, hostname, level, alarm, status FROM event 
 			WHERE uid = ? limit ?,?
 		`
 	}

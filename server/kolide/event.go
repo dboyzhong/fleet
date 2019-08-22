@@ -34,7 +34,7 @@ type EventHistory struct {
 	Uid      string       `json:"uid"      db:"uid"`
 	Platform string       `json:"platform" db:"platform"`
 	Hostname string       `json:"hostname" db:"hostname"`
-	Level int             `json:"level"    db:"-"`
+	Level int             `json:"level"    db:"level"`
 	EventId string        `json:"event_id" db:"-"`
 	Title string          `json:"title"    db:"-"`
 	Type int              `json:"type"     db:"-"`
@@ -43,6 +43,7 @@ type EventHistory struct {
 	IOC string            `json:"ioc"      db:"-"`
 	Details string        `json:"details"  db:"-"`
 	DataDB   string       `json:"-"        db:"alarm"`
+	Status  int           `json:"status"   db:"status"`
 }
 
 
