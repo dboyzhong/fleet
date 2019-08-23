@@ -5,29 +5,35 @@ import (
 	"time"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/kolide/fleet/server/kolide"
+	"github.com/kolide/fleet/server/pubsub"
 	"github.com/DeanThompson/jpush-api-go-client"
 	"github.com/DeanThompson/jpush-api-go-client/push"
 	"context"
 	"net/http"
 	"errors"
-	"encoding/hex"
-	"encoding/binary"
-	"crypto/md5"
+	_"encoding/hex"
+	_"encoding/binary"
+	_"crypto/md5"
 	"strconv"
+	"fmt"
 )
 
 type rulesEngine struct {
 	ctx context.Context
 	eventChan chan *kolide.Alarm
 	msgChan chan []json.RawMessage
+	bs  *pubsub.BashResults
+	logger kitlog.Logger
 	startSeq int64
 }
 
-func newRulesEngine(ctx context.Context) *rulesEngine {
+func newRulesEngine(ctx context.Context, bs *pubsub.BashResults, logger kitlog.Logger) *rulesEngine {
 	ret := &rulesEngine {
 		ctx: ctx,
 		eventChan : make(chan *kolide.Alarm, 100),
 		msgChan   : make(chan []json.RawMessage),
+		bs        : bs,
+		logger    :logger,
 	}
 
 	go func() {
@@ -48,14 +54,39 @@ func (re *rulesEngine) AlarmChannel() <-chan *kolide.Alarm {
 }
 
 func (re *rulesEngine) sendEvent(msg []json.RawMessage) error {
-	re.msgChan <- msg
+	//re.msgChan <- msg
+	re.logger.Log("log", "rule engine: send event");
+	if err := re.bs.Write(msg); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error) {
-	msg := <- re.msgChan
+	//msg := <- re.msgChan
 
-	a := &kolide.Alarm{
+	var alarmMsg string
+	var alarm = &kolide.Alarm{}
+	msgCh, _:= re.bs.ReadChannel(ctx)
+
+	msg, ok := <- msgCh
+	re.logger.Log("log", "rule engine got event result: ", msg);
+
+	if !ok {
+		return nil, errors.New("bash store read channel canncelled") 
+	}
+
+	if alarmMsg, ok = msg.(string); !ok {
+		return nil, errors.New("bash store read channel err");
+	}
+
+	if err := json.Unmarshal([]byte(alarmMsg), alarm); err != nil {
+		return nil, fmt.Errorf("bash store json failed: %v", err)
+	}
+
+	return alarm, nil
+
+	/*a := &kolide.Alarm{
 		Platform:"Alarm_ebi",
 		Hostname:"virtual-1",
 		Data: make([]*kolide.AlarmData, 0),
@@ -90,7 +121,7 @@ func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error
 	    ad.Details = "Alarm for test"
 	    a.Data = append(a.Data, ad)
 	}
-	return  a, nil
+	return  a, nil*/
 }
 
 // event middleware logs the service actions
@@ -101,6 +132,7 @@ type eventMiddleware struct {
 	jclient *jpush.JPushClient
 	pf      *push.Platform
 	re      *rulesEngine
+	bs      *pubsub.BashResults
 	startSeq int64
 }
 
@@ -144,7 +176,8 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 }
 
 // NewLoggingService takes an existing service and adds a logging wrapper
-func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logger, jpushID, jpushKey string) kolide.Service {
+func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logger, 
+	bs *pubsub.BashResults, jpushID, jpushKey string) kolide.Service {
 
 	s := eventMiddleware{
 		Service: svc,
@@ -152,7 +185,8 @@ func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logg
 		logger: logger,
 		jclient: jpush.NewJPushClient(jpushID, jpushKey),
 		pf: &push.Platform{},
-		re: newRulesEngine(context.Background()),
+		re: newRulesEngine(context.Background(), bs, logger),
+		bs: bs,
 		startSeq: time.Now().Unix(),
 	}
 	s.pf.Add("ios", "android")

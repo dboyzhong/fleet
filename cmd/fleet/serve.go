@@ -186,7 +186,7 @@ the way that the Fleet server works.
 			svcLogger := kitlog.With(logger, "component", "service")
 			svc = service.NewLoggingService(svc, svcLogger)
 			svc = service.NewMetricsService(svc, requestCount, requestLatency)
-			svc = service.NewEventService(svc, ds, logger, config.Event.JPushID, config.Event.JPushKey)
+			svc = service.NewEventService(svc, ds, logger, bashStore, config.Event.JPushID, config.Event.JPushKey)
 
 			httpLogger := kitlog.With(logger, "component", "http")
 

@@ -3,12 +3,13 @@ package pubsub
 import (
 	"context"
 	"encoding/json"
-
+	"time"
 	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
 )
 
-const bashTopic = "bash_cmd"
+const bashTopic = "logs_topic"
+const bashResult = "logs_result"
 
 type BashResults struct {
 	// connection pool
@@ -40,9 +41,7 @@ func (b *BashResults) ReadChannel(ctx context.Context) (<-chan interface{}, erro
 	outChannel := make(chan interface{})
 
 	conn := redis.PubSubConn{Conn: b.pool.Get()}
-
-	conn.Subscribe(bashTopic)
-
+	conn.Subscribe(bashResult)
 	msgChannel := make(chan interface{})
 	// Run a separate goroutine feeding redis messages into
 	// msgChannel
@@ -58,7 +57,12 @@ func (b *BashResults) ReadChannel(ctx context.Context) (<-chan interface{}, erro
 			select {
 			case msg, ok := <-msgChannel:
 				if !ok {
-					return
+					conn.Close()
+					time.Sleep(10 * time.Second)
+					msgChannel = make(chan interface{})
+					conn = redis.PubSubConn{Conn: b.pool.Get()}
+					conn.Subscribe(bashResult)
+					go receiveMessages(&conn, msgChannel)
 				}
 				switch msg := msg.(type) {
 				case string:
