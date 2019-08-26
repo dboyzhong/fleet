@@ -64,27 +64,31 @@ func (re *rulesEngine) sendEvent(msg []json.RawMessage) error {
 
 func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error) {
 	//msg := <- re.msgChan
-
-	var alarmMsg string
+	var alarmMsg []byte
 	var alarm = &kolide.Alarm{}
 	msgCh, _:= re.bs.ReadChannel(ctx)
 
 	msg, ok := <- msgCh
 	re.logger.Log("log", "rule engine got event result: ", msg);
+	fmt.Println("log", "rule engine got event result: ", msg);
 
 	if !ok {
+		re.logger.Log("subscribe alarm : ", "bash store read channel canncelled");
 		return nil, errors.New("bash store read channel canncelled") 
 	}
 
-	if alarmMsg, ok = msg.(string); !ok {
-		return nil, errors.New("bash store read channel err");
-	}
+	if alarmMsg, ok = msg.([]byte); !ok {
+		re.logger.Log("subscribe alarm : ", "bash store read channel msg not []byte type");
+		return nil, errors.New("bash store read channel msg not []byte type") 
+	} 
 
-	if err := json.Unmarshal([]byte(alarmMsg), alarm); err != nil {
+	if err := json.Unmarshal(alarmMsg, alarm); err != nil {
+		re.logger.Log("subscribe alarm : ", "bash store json failed : %v", err);
 		return nil, fmt.Errorf("bash store json failed: %v", err)
 	}
 
 	return alarm, nil
+
 
 	/*a := &kolide.Alarm{
 		Platform:"Alarm_ebi",

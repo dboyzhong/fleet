@@ -6,6 +6,7 @@ import (
 	"time"
 	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
+	_"fmt"
 )
 
 const bashTopic = "logs_topic"
@@ -65,8 +66,8 @@ func (b *BashResults) ReadChannel(ctx context.Context) (<-chan interface{}, erro
 					go receiveMessages(&conn, msgChannel)
 				}
 				switch msg := msg.(type) {
-				case string:
-					outChannel <- msg
+				case redis.Message:
+					outChannel <- msg.Data
 				case error:
 					outChannel <- errors.Wrap(msg, "reading from redis")
 				}
