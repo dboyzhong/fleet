@@ -211,10 +211,25 @@ func decodeRiskMetricRequest(ctx context.Context, r *http.Request) (interface{},
 
 func decodeSetEventStatusRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var req setEventStatusRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
+	r.ParseForm()
+
+	//if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		for k, v := range r.Form {
+			fmt.Printf("%s:%s\n", k, v[0])
+		}
+		if _, ok := r.Form["uid"]; ok {
+			req.Uid = r.Form["uid"][0]
+		}
+
+		if _, ok := r.Form["event_id"]; ok {
+			req.EventId = r.Form["event_id"][0]
+		}
+
+		if _, ok := r.Form["status"]; ok {
+			req.Status, _ = strconv.Atoi(r.Form["status"][0])
+		}
+	//}
+	//defer r.Body.Close()
 
 	return req, nil
 }
