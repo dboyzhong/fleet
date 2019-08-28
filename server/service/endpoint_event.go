@@ -33,10 +33,11 @@ type eventHistoryRequest struct {
 	Sort  string `json:"sort"`
 	Start int64  `json:"start"`
 	End   int64  `json:"end"` 
+	Level int64  `json:"level"`
 }
 
 type eventHistoryResponse struct {
-	History []*kolide.EventHistory   `json:"event_history"`
+	History []*kolide.EventHistory   `json:"event_history,omitempty"`
 	Err         error              `json:"error,omitempty"`
 }
 
@@ -67,7 +68,7 @@ func makeSetEventStatusEndpoint(svc kolide.Service) endpoint.Endpoint {
 func makeEventHistoryEndpoint(svc kolide.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(eventHistoryRequest)
-		result, err := svc.EventHistory(ctx, req.Uid, req.Sort, req.Start, req.End)
+		result, err := svc.EventHistory(ctx, req.Uid, req.Sort, req.Start, req.End,req.Level)
 		if err != nil {
 			return eventHistoryResponse{Err: err}, nil
 		}

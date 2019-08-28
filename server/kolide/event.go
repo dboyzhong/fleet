@@ -52,11 +52,11 @@ type EventStore interface {
 	GetRiskMetric(uid string) (*RiskMetric, error)
 	SetEventStatus(uid, eventId string, status int) (string, error)
 	GetAlarm(status int) ([]*Alarm, error)
-	EventHistory(uid, sort string, start, end int64) ([]*EventHistory, error)
+	EventHistory(uid, sort string, start, end, level int64) ([]*EventHistory, error)
 }
 
 type EventService interface {
 	GetRiskMetric(ctx context.Context, uid string) (*RiskMetric, error)
 	SetEventStatus(ctx context.Context, uid, eventId string, status int) (string, error)
-	EventHistory(ctx context.Context, uid, sort string, start, end int64) ([]*EventHistory, error)
+	EventHistory(ctx context.Context, uid, sort string, start, end, level int64) ([]*EventHistory, error)
 }

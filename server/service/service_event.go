@@ -12,6 +12,6 @@ func (svc service) SetEventStatus(ctx context.Context, uid, eventId string, stat
 	return svc.ds.SetEventStatus(uid, eventId, status)
 }
 
-func (svc service) EventHistory(ctx context.Context, uid, sort string, start, end int64) ([]*kolide.EventHistory, error) {
-	return svc.ds.EventHistory(uid, sort, start, end)
+func (svc service) EventHistory(ctx context.Context, uid, sort string, start, end, level int64) ([]*kolide.EventHistory, error) {
+	return svc.ds.EventHistory(uid, sort, start, end, level)
 }
