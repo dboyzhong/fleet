@@ -256,6 +256,14 @@ func decodeEventHistoryRequest(ctx context.Context, r *http.Request) (interface{
 	return eventHistoryRequest{Uid: uid, Sort: sort, Start: start, End: end, Level: level}, nil
 }
 
+func decodeEventDetailsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	uid   := r.URL.Query().Get("uid")
+	event_id := r.URL.Query().Get("event_id")
+
+	return eventDetailsRequest{Uid: uid, EventId: event_id}, nil
+}
+
+
 func (ew eventMiddleware) AlarmRoutine() {
 	for {
 		select {
@@ -295,7 +303,7 @@ func (ew eventMiddleware) update(a *kolide.Alarm, status int) error {
 func (ew eventMiddleware) save(a *kolide.Alarm, status int) error {
 	for _, v := range a.Data {
 		AlarmString, _:= json.Marshal(v)
-		ew.ds.NewEvent(a.Uid, v.EventId, a.Platform, a.Hostname, a.Content, string(AlarmString), status)	
+		ew.ds.NewEvent(a.Uid, v.EventId, a.Platform, a.Hostname, a.Content, string(AlarmString), v.Level, status)	
 	}
 	return nil
 }

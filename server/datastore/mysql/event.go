@@ -2,15 +2,15 @@ package mysql
 
 import (
 	_"database/sql"
-	_"time"
+	"time"
 	"github.com/kolide/fleet/server/kolide"
-	_"fmt"
+	"fmt"
 	_"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"encoding/json"
 )
 
-func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, status int) (error) {
+func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) (error) {
 	sqlStatement := `
 	INSERT INTO event (
 		uid,
@@ -19,11 +19,16 @@ func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, a
 		hostname,
 		content,
 		alarm,
-		status
+		status,
+		level
 	)
-	VALUES( ?,?,?,?,?,?,? )
+	VALUES( ?,?,?,?,?,?,?,? )
 	`
-	_, err := d.db.Exec(sqlStatement, uid, eventId, platform, hostname, content, alarm, status);
+	_, err := d.db.Exec(sqlStatement, uid, eventId, platform, hostname, content, alarm, status, level);
+	if err != nil {
+		time.Sleep(time.Second)
+		_, err = d.db.Exec(sqlStatement, uid, eventId, platform, hostname, content, alarm, status);
+	}
 	return err;
 }
 
@@ -42,29 +47,36 @@ func (d* Datastore) SetEventStatus(uid, eventId string, status int) (string, err
 	res, err := d.db.Exec(sqlStatement, status, eventId);
 
 	if err != nil {
-		return "failed", err
-	} else {
-		rowsaffected, err := res.RowsAffected()
-    	if err != nil {
-    	    return "failed", err
-		} else if rowsaffected > 0 {
-			return "success", nil
-		} else {
-			return "failed", errors.New("no such event_id")
+		time.Sleep(time.Second)
+		res, err = d.db.Exec(sqlStatement, status, eventId);
+		if err != nil {
+			return "failed", err
 		}
+	}
+	rowsaffected, err := res.RowsAffected()
+   	if err != nil {
+   	    return "failed", err
+	} else if rowsaffected > 0 {
+		return "success", nil
+	} else {
+		return "failed", errors.New("no such event_id")
 	}
 }
 
 func (d* Datastore) GetAlarm(status int) ([]*kolide.Alarm, error) {
 
 	sqlStatement := `
-		SELECT uid, event_id, alarm FROM event 
+		SELECT uid, platform, hostname, event_id, alarm FROM event 
 		WHERE status = ? LIMIT 2
 	`
 	var content []*kolide.Alarm
 	err := d.db.Select(&content, sqlStatement, status)
 	if err != nil {
-		return nil, errors.Wrap(err, "get alarm")
+		time.Sleep(time.Second)
+		err = d.db.Select(&content, sqlStatement, status)
+		if err != nil {
+			return nil, errors.Wrap(err, "get alarm")
+		}
 	}
 	return content, nil
 }
@@ -88,7 +100,11 @@ func (d* Datastore) EventHistory(uid, sort string, start, end, level int64) ([]*
 		}
 		err := d.db.Select(&history, sqlStatement, uid, start, end - start + 1)
 		if err != nil {
-			return nil, errors.Wrap(err, "event history")
+			time.Sleep(time.Second)
+			err = d.db.Select(&history, sqlStatement, uid, start, end - start + 1)
+			if err != nil {
+				return nil, errors.Wrap(err, "event history")
+			}
 		}
 	} else {
 		if sort == "desc" {
@@ -104,7 +120,11 @@ func (d* Datastore) EventHistory(uid, sort string, start, end, level int64) ([]*
 		}
 		err := d.db.Select(&history, sqlStatement, uid, level, start, end - start + 1)
 		if err != nil {
-			return nil, errors.Wrap(err, "event history")
+			time.Sleep(time.Second)
+			err = d.db.Select(&history, sqlStatement, uid, level, start, end - start + 1)
+			if err != nil {
+				return nil, errors.Wrap(err, "event history")
+			}
 		}
 	}
 
@@ -115,4 +135,31 @@ func (d* Datastore) EventHistory(uid, sort string, start, end, level int64) ([]*
 	}
 
 	return history, nil
+}
+
+func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, error) {
+
+	var content []*kolide.EventDetails
+	sqlStatement := `
+		SELECT uid, platform, hostname, event_id, level, alarm, status FROM event 
+		WHERE uid = ? and event_id = ? LIMIT 1
+	`
+
+	err := d.db.Select(&content, sqlStatement, uid, event_id)
+	if err != nil {
+		time.Sleep(time.Second)
+		err = d.db.Select(&content, sqlStatement, uid, event_id)
+		if err != nil {
+			return nil, errors.Wrap(err, "get event details")
+		}
+	}
+
+	if content == nil {
+		return nil, fmt.Errorf("event not found")
+	}
+
+	if err := json.Unmarshal([]byte(content[0].DataDB), content[0]); err != nil {
+		return nil, errors.Wrap(err, "event details json error")
+	}
+	return content[0], nil
 }

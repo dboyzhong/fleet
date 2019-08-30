@@ -101,6 +101,7 @@ type KolideEndpoints struct {
 	RiskMetric                            endpoint.Endpoint
 	SetEventStatus                        endpoint.Endpoint
 	EventHistory                          endpoint.Endpoint
+	EventDetails                          endpoint.Endpoint
 }
 
 // MakeKolideServerEndpoints creates the Kolide API endpoints.
@@ -205,6 +206,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		RiskMetric:                    makeRiskMetricEndpoint(svc),
 		SetEventStatus:                makeSetEventStatusEndpoint(svc),
 		EventHistory:                  makeEventHistoryEndpoint(svc),
+		EventDetails:                  makeEventDetailsEndpoint(svc),
 	}
 }
 
@@ -295,6 +297,7 @@ type kolideHandlers struct {
 	RiskMetric                            http.Handler
 	SetEventStatus                        http.Handler
 	EventHistory                          http.Handler
+	EventDetails                          http.Handler
 }
 
 func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *kolideHandlers {
@@ -389,6 +392,7 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		RiskMetric:                            newServer(e.RiskMetric, decodeRiskMetricRequest),
 		SetEventStatus:                        newServer(e.SetEventStatus, decodeSetEventStatusRequest),
 		EventHistory:                          newServer(e.EventHistory, decodeEventHistoryRequest),
+		EventDetails:                          newServer(e.EventDetails, decodeEventDetailsRequest),
 	}
 }
 
@@ -528,8 +532,8 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/gethosts", h.ListHostsEbi).Methods("GET").Name("list_hosts_ebi")
 	r.Handle("/api/risk_metric", h.RiskMetric).Methods("GET").Name("risk_metric")
 	r.Handle("/api/set_event_status", h.SetEventStatus).Methods("POST").Name("set_event_status")
-	r.Handle("/api/set_event_status", h.SetEventStatus).Methods("POST").Name("set_event_status")
 	r.Handle("/api/event_history", h.EventHistory).Methods("GET").Name("event_history")
+	r.Handle("/api/event_details", h.EventDetails).Methods("GET").Name("event_details")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.

@@ -15,7 +15,8 @@ type AlarmData struct {
 	Title string         `json:"title"`
 	Type int             `json:"type"`
 	CreateTime time.Time `json:"create_time"`
-	Ip string            `json:"ip"`
+	RemoteIp string      `json:"remote_ip"`
+	AttackIp string      `json:"attack_ip"`
 	IOC string           `json:"ioc"`
 	Details string       `json:"details"`
 }
@@ -35,28 +36,32 @@ type EventHistory struct {
 	Platform string       `json:"platform" db:"platform"`
 	Hostname string       `json:"hostname" db:"hostname"`
 	Level int             `json:"level"    db:"level"`
-	EventId string        `json:"event_id" db:"-"`
+	EventId string        `json:"event_id" db:"event_id"`
 	Title string          `json:"title"    db:"-"`
 	Type int              `json:"type"     db:"-"`
 	CreateTime time.Time  `json:"create_time" db:"-"`
-	Ip string             `json:"ip"       db:"-"`
+	RemoteIp string       `json:"remote_ip"   db:"-"`
+	AttackIp string       `json:"attack_ip"   db:"-"`
 	IOC string            `json:"ioc"      db:"-"`
 	Details string        `json:"details"  db:"-"`
 	DataDB   string       `json:"-"        db:"alarm"`
 	Status  int           `json:"status"   db:"status"`
 }
 
+type EventDetails EventHistory
 
 type EventStore interface {
-	NewEvent(uid, eventId, platform, hostname string, content, alarm string, status int) error
+	NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) error
 	GetRiskMetric(uid string) (*RiskMetric, error)
 	SetEventStatus(uid, eventId string, status int) (string, error)
 	GetAlarm(status int) ([]*Alarm, error)
 	EventHistory(uid, sort string, start, end, level int64) ([]*EventHistory, error)
+	EventDetails(uid, event_id string) (*EventDetails, error)
 }
 
 type EventService interface {
 	GetRiskMetric(ctx context.Context, uid string) (*RiskMetric, error)
 	SetEventStatus(ctx context.Context, uid, eventId string, status int) (string, error)
 	EventHistory(ctx context.Context, uid, sort string, start, end, level int64) ([]*EventHistory, error)
+	EventDetails(ctx context.Context, uid, event_id string) (*EventDetails, error)
 }
