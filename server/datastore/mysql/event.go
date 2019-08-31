@@ -81,50 +81,47 @@ func (d* Datastore) GetAlarm(status int) ([]*kolide.Alarm, error) {
 	return content, nil
 }
 
-func (d* Datastore) EventHistory(uid, sort string, start, end, level int64) ([]*kolide.EventHistory, error) {
+func (d* Datastore) EventHistory(uid, sort string, start, end, level, status int64) ([]*kolide.EventHistory, error) {
 
 	var sqlStatement string
 	var history []*kolide.EventHistory
 
+	sqlStatementFormat := `SELECT uid, platform, hostname, level, alarm, status FROM event 
+					WHERE uid = ? %s order by id %s limit ?,?`
+
+	args := make([]interface{}, 0, 10)
+	args = append(args, uid)
+
 	if 3 == level {
-		if sort == "desc" {
-		    sqlStatement = `
-		    	SELECT uid, platform, hostname, alarm FROM event 
-		    	WHERE uid = ? order by id desc limit ?,?
-		    `
+		if 1 == status {
+			sqlStatement = fmt.Sprintf(sqlStatementFormat, "and (status = 0 or status = 1)", sort)
+		} else if 2 == status {
+			sqlStatement = fmt.Sprintf(sqlStatementFormat, "and (status = 2)", sort)
 		} else {
-		    sqlStatement = `
-		    	SELECT uid, platform, hostname, level, alarm, status FROM event 
-				WHERE uid = ? limit ?,?
-			`
-		}
-		err := d.db.Select(&history, sqlStatement, uid, start, end - start + 1)
-		if err != nil {
-			time.Sleep(time.Second)
-			err = d.db.Select(&history, sqlStatement, uid, start, end - start + 1)
-			if err != nil {
-				return nil, errors.Wrap(err, "event history")
-			}
+			sqlStatement = fmt.Sprintf(sqlStatementFormat, "", sort)
 		}
 	} else {
-		if sort == "desc" {
-		    sqlStatement = `
-		    	SELECT uid, platform, hostname, alarm FROM event 
-		    	WHERE uid = ? and level = ? order by id desc limit ?,?
-		    `
+		if 1== status {
+			sqlStatement = fmt.Sprintf(sqlStatementFormat, "and level = ? and (status = 0 or status = 1)", sort)
+			args = append(args, level)
+		} else if 2 == status {
+			sqlStatement = fmt.Sprintf(sqlStatementFormat, "and level = ? and status = 2", sort)
+			args = append(args, level)
 		} else {
-		    sqlStatement = `
-		    	SELECT uid, platform, hostname, level, alarm, status FROM event 
-				WHERE uid = ? and level = ? limit ?,?
-			`
+			sqlStatement = fmt.Sprintf(sqlStatementFormat, "and level = ?", sort)
+			args = append(args, level)
 		}
-		err := d.db.Select(&history, sqlStatement, uid, level, start, end - start + 1)
+	}
+
+	args = append(args, start)
+	args = append(args, end - start + 1)
+
+	err := d.db.Select(&history, sqlStatement, args...)
+	if err != nil {
+		time.Sleep(time.Second)
+		err = d.db.Select(&history, sqlStatement, args...)
 		if err != nil {
-			time.Sleep(time.Second)
-			err = d.db.Select(&history, sqlStatement, uid, level, start, end - start + 1)
-			if err != nil {
-				return nil, errors.Wrap(err, "event history")
-			}
+			return nil, errors.Wrap(err, "event history")
 		}
 	}
 

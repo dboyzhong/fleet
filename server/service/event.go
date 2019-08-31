@@ -237,7 +237,7 @@ func decodeSetEventStatusRequest(ctx context.Context, r *http.Request) (interfac
 func decodeEventHistoryRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	uid   := r.URL.Query().Get("uid")
 	sort  := r.URL.Query().Get("sort")
-	var start, end, level int64
+	var start, end, level, status int64
 	var err error
 
 
@@ -253,7 +253,11 @@ func decodeEventHistoryRequest(ctx context.Context, r *http.Request) (interface{
 		level = 3
 	}
 
-	return eventHistoryRequest{Uid: uid, Sort: sort, Start: start, End: end, Level: level}, nil
+	if status, err = strconv.ParseInt(r.URL.Query().Get("status"),10,64); err != nil {
+		status = 3 
+	}
+
+	return eventHistoryRequest{Uid: uid, Sort: sort, Start: start, End: end, Level: level, Status: status}, nil
 }
 
 func decodeEventDetailsRequest(ctx context.Context, r *http.Request) (interface{}, error) {
