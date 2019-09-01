@@ -7,6 +7,7 @@ import(
 type RiskMetric struct {
 	Uid   string `json:"uid"`
 	Score int    `json:"score"`
+	Desc  string `json:"description"`
 }
 
 type AlarmData struct {
@@ -42,7 +43,7 @@ type EventHistory struct {
 	CreateTime time.Time  `json:"create_time" db:"-"`
 	RemoteIp string       `json:"remote_address"   db:"-"`
 	AttackIp string       `json:"attack_address"   db:"-"`
-	IOC string            `json:"ioc"      db:"-"`
+	IOC string            `json:"ioc"      db:"ioc"`
 	Details string        `json:"details"  db:"-"`
 	DataDB   string       `json:"-"        db:"alarm"`
 	Status  int           `json:"status"   db:"status"`

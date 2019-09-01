@@ -10,6 +10,23 @@ import (
 	"encoding/json"
 )
 
+var (
+	riskMetricDesc  = map[int]string {
+		0 : "目前风险系统较优",
+		1 : "风险指数较差，需要尽一步排查更改",
+		2 : "安全威胁风险指数非常大，请及时排查安全隐患",
+	}
+
+	riskMetricScoreTotal = 100
+	riskMetricScoreLimit = 10 
+
+	riskMetricLevel2Minus = 10
+	riskMetricLevel2Limit = 70 
+
+	riskMetricLevel1Minus = 5
+	riskMetricLevel1Limit = 30
+)
+
 func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) (error) {
 	sqlStatement := `
 	INSERT INTO event (
@@ -33,9 +50,58 @@ func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, a
 }
 
 func (d* Datastore) GetRiskMetric(uid string) (*kolide.RiskMetric, error) {
+
+	sqlStatement := `
+		SELECT level FROM event 
+		WHERE uid = ? and (status = 0 or status = 1)
+	`
+	var content []int
+	err := d.db.Select(&content, sqlStatement, uid)
+	if err != nil {
+		time.Sleep(time.Second)
+		err = d.db.Select(&content, sqlStatement, uid)
+		if err != nil {
+			return nil, errors.Wrap(err, "get risk metric")
+		}
+	}
+
+	level1Minus := 0
+	level2Minus := 0
+	score := 0
+	totalMinus := 0
+
+	for _, level := range content {
+		if level == 1 {
+			level1Minus += riskMetricLevel1Minus
+			if level1Minus > riskMetricLevel1Limit {
+				level1Minus = riskMetricLevel1Limit
+			}
+		} else if level == 2 {
+			level2Minus += riskMetricLevel2Minus
+			if level2Minus > riskMetricLevel2Limit {
+				level2Minus = riskMetricLevel2Limit
+			}
+		}
+	}
+	totalMinus = level1Minus + level2Minus
+	if (totalMinus + riskMetricScoreLimit) > riskMetricScoreTotal {
+		totalMinus = (riskMetricScoreTotal - riskMetricScoreLimit)
+	}
+
+	score = (riskMetricScoreTotal - totalMinus)
+	var desc string
+	if score >= 80 {
+		desc = riskMetricDesc[0]
+	} else if score >= 60 && score < 80 {
+		desc = riskMetricDesc[1]
+	} else {
+		desc = riskMetricDesc[2]
+	}
+	
 	return &kolide.RiskMetric{
 		Uid: uid,
-		Score: 80,
+		Score: score,
+		Desc : desc,
 	}, nil
 }
 
@@ -138,8 +204,8 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 
 	var content []*kolide.EventDetails
 	sqlStatement := `
-		SELECT uid, platform, hostname, event_id, level, alarm, status FROM event 
-		WHERE uid = ? and event_id = ? LIMIT 1
+		SELECT e.uid, e.platform, e.hostname, e.event_id, e.level, e.alarm, e.status, i.ioc FROM event e, ioc i 
+		WHERE e.event_id = i.event_id and e.uid = ? and e.event_id = ? LIMIT 1
 	`
 
 	err := d.db.Select(&content, sqlStatement, uid, event_id)
@@ -155,8 +221,11 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 		return nil, fmt.Errorf("event not found")
 	}
 
+	ioc := content[0].IOC
+
 	if err := json.Unmarshal([]byte(content[0].DataDB), content[0]); err != nil {
 		return nil, errors.Wrap(err, "event details json error")
 	}
+	content[0].IOC = ioc
 	return content[0], nil
 }
