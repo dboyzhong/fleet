@@ -152,6 +152,12 @@ func (d* Datastore) EventHistory(uid, sort string, start, end, level, status int
 	var sqlStatement string
 	var history []*kolide.EventHistory
 
+	if sort == "dec" {
+		sort = "desc"
+	} else if sort == "inc" {
+		sort = "asc"
+	}
+
 	sqlStatementFormat := `SELECT uid, platform, hostname, level, alarm, status FROM event 
 					WHERE uid = ? %s order by id %s limit ?,?`
 
