@@ -145,7 +145,7 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 	msg, _ := json.Marshal(a)
 	audience := push.NewAudience() 
 	audience.SetAlias([]string{a.Uid})
-
+	ew.logger.Log("-------------uid: ", a.Uid)
 	iosNotification := push.NewIosNotification("Ebi Alert")
     iosNotification.Badge = 1
     iosNotification.ContentAvailable = true
@@ -156,7 +156,7 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 	
 	options := push.NewOptions()
     options.TimeToLive = 10000000
-    options.ApnsProduction = true
+    options.ApnsProduction = false
 	options.BigPushDuration = 1500
 	
 	payload := push.NewPushObject()
@@ -165,13 +165,13 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
     payload.Notification = notification
 	payload.Options = options
 	
-	result, err := ew.jclient.PushValidate(payload)
+	result, err := ew.jclient.Push(payload)
     if err != nil {
 		ew.logger.Log("err", "push failed: ", err)
 	} else {
 		if _, ok := result.MsgId.(int); !ok {
 			ew.logger.Log("err", "push falied: ", result)
-			err = errors.New(result.Error.String())
+			err = errors.New("jpush error")
 		} else {
 			ew.logger.Log("err", "push success: ", result)
 		}
@@ -194,6 +194,7 @@ func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logg
 		startSeq: time.Now().Unix(),
 	}
 	s.pf.Add("ios", "android")
+	s.jclient.SetDebug(true)
 
 	go func(){
 		s.AlarmRoutine()
