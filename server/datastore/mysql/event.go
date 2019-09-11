@@ -210,12 +210,13 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 
 	var content []*kolide.EventDetails
 	sqlStatement := `
-		SELECT e.uid, e.platform, e.hostname, e.event_id, e.level, e.alarm, e.status, i.ioc FROM event e, ioc i 
-		WHERE e.event_id = i.event_id and e.uid = ? and e.event_id = ? LIMIT 1
+		SELECT e.uid, e.platform, e.hostname, e.event_id, e.level, e.alarm, e.status, IFNULL(i.ioc, '') AS ioc FROM event e LEFT JOIN ioc i 
+		ON e.event_id = i.event_id WHERE e.uid = ? and e.event_id = ? LIMIT 1
 	`
 
 	err := d.db.Select(&content, sqlStatement, uid, event_id)
 	if err != nil {
+		fmt.Println("get details error: ", err)
 		time.Sleep(time.Second)
 		err = d.db.Select(&content, sqlStatement, uid, event_id)
 		if err != nil {
@@ -230,6 +231,7 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 	ioc := content[0].IOC
 
 	if err := json.Unmarshal([]byte(content[0].DataDB), content[0]); err != nil {
+		fmt.Println("get details json error: ", err)
 		return nil, errors.Wrap(err, "event details json error")
 	}
 	content[0].IOC = ioc
