@@ -157,7 +157,6 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 	options := push.NewOptions()
     options.TimeToLive = 10000000
     options.ApnsProduction = false
-	options.BigPushDuration = 1500
 	
 	payload := push.NewPushObject()
     payload.Platform = ew.pf
@@ -169,12 +168,7 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
     if err != nil {
 		ew.logger.Log("err", "push failed: ", err)
 	} else {
-		if _, ok := result.MsgId.(int); !ok {
-			ew.logger.Log("err", "push falied: ", result)
-			err = errors.New("jpush error")
-		} else {
-			ew.logger.Log("err", "push success: ", result)
-		}
+		ew.logger.Log("err", "push success: ", result)
 	}
 	return err
 }
