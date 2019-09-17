@@ -20,11 +20,16 @@ var (
 	riskMetricScoreTotal = 100
 	riskMetricScoreLimit = 10 
 
-	riskMetricLevel2Minus = 10
-	riskMetricLevel2Limit = 70 
+	riskMetricLevel2First = true
+	riskMetricLevel2Minus = 20
+	riskMetricLevel2MinusP= 10
+	riskMetricLevel2Limit = 60 
 
 	riskMetricLevel1Minus = 5
-	riskMetricLevel1Limit = 30
+	riskMetricLevel1Limit = 20
+
+	riskMetricLevel0Minus = 3
+	riskMetricLevel0Limit = 10
 )
 
 func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) (error) {
@@ -58,6 +63,7 @@ func (d* Datastore) GetRiskMetric(uid string) (*kolide.RiskMetric, error) {
 	var content []int
 	err := d.db.Select(&content, sqlStatement, uid)
 	if err != nil {
+		fmt.Println("get risk metric error: ", err)
 		time.Sleep(time.Second)
 		err = d.db.Select(&content, sqlStatement, uid)
 		if err != nil {
@@ -65,6 +71,7 @@ func (d* Datastore) GetRiskMetric(uid string) (*kolide.RiskMetric, error) {
 		}
 	}
 
+	level0Minus := 0
 	level1Minus := 0
 	level2Minus := 0
 	score := 0
@@ -77,13 +84,23 @@ func (d* Datastore) GetRiskMetric(uid string) (*kolide.RiskMetric, error) {
 				level1Minus = riskMetricLevel1Limit
 			}
 		} else if level == 2 {
-			level2Minus += riskMetricLevel2Minus
+			riskMetricScoreTotal = 59
+			if riskMetricLevel2First {
+				level2Minus += riskMetricLevel2Minus
+			} else {
+				level2Minus += riskMetricLevel2MinusP
+			}
 			if level2Minus > riskMetricLevel2Limit {
 				level2Minus = riskMetricLevel2Limit
 			}
+		} else if level == 0 {
+			level0Minus += riskMetricLevel0Minus
+			if level0Minus > riskMetricLevel0Limit {
+				level0Minus = riskMetricLevel0Limit
+			}
 		}
 	}
-	totalMinus = level1Minus + level2Minus
+	totalMinus = level0Minus + level1Minus + level2Minus
 	if (totalMinus + riskMetricScoreLimit) > riskMetricScoreTotal {
 		totalMinus = (riskMetricScoreTotal - riskMetricScoreLimit)
 	}
@@ -113,6 +130,7 @@ func (d* Datastore) SetEventStatus(uid, eventId string, status int) (string, err
 	res, err := d.db.Exec(sqlStatement, status, eventId);
 
 	if err != nil {
+		fmt.Println("set event error: ", err)
 		time.Sleep(time.Second)
 		res, err = d.db.Exec(sqlStatement, status, eventId);
 		if err != nil {
@@ -138,6 +156,7 @@ func (d* Datastore) GetAlarm(status int) ([]*kolide.Alarm, error) {
 	var content []*kolide.Alarm
 	err := d.db.Select(&content, sqlStatement, status)
 	if err != nil {
+		fmt.Println("get alarm error: ", err)
 		time.Sleep(time.Second)
 		err = d.db.Select(&content, sqlStatement, status)
 		if err != nil {
@@ -190,6 +209,7 @@ func (d* Datastore) EventHistory(uid, sort string, start, end, level, status int
 
 	err := d.db.Select(&history, sqlStatement, args...)
 	if err != nil {
+		fmt.Println("get event history error: ", err)
 		time.Sleep(time.Second)
 		err = d.db.Select(&history, sqlStatement, args...)
 		if err != nil {
