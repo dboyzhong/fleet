@@ -21,15 +21,15 @@ var (
 	riskMetricScoreLimit = 10 
 
 	riskMetricLevel2First = true
-	riskMetricLevel2Minus = 20
-	riskMetricLevel2MinusP= 10
-	riskMetricLevel2Limit = 60 
+	riskMetricLevel2Minus = 10
+	riskMetricLevel2MinusP= 20
+	riskMetricLevel2Limit = 50 
 
 	riskMetricLevel1Minus = 5
-	riskMetricLevel1Limit = 20
+	riskMetricLevel1Limit = 30
 
 	riskMetricLevel0Minus = 3
-	riskMetricLevel0Limit = 10
+	riskMetricLevel0Limit = 20
 )
 
 func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) (error) {
@@ -84,11 +84,11 @@ func (d* Datastore) GetRiskMetric(uid string) (*kolide.RiskMetric, error) {
 				level1Minus = riskMetricLevel1Limit
 			}
 		} else if level == 2 {
-			riskMetricScoreTotal = 59
+			riskMetricScoreTotal = 60
 			if riskMetricLevel2First {
-				level2Minus += riskMetricLevel2Minus
+				level2Minus = (riskMetricLevel2Minus + riskMetricLevel2MinusP)
 			} else {
-				level2Minus += riskMetricLevel2MinusP
+				level2Minus += riskMetricLevel2Minus
 			}
 			if level2Minus > riskMetricLevel2Limit {
 				level2Minus = riskMetricLevel2Limit
