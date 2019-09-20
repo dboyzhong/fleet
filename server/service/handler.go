@@ -522,12 +522,12 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 
 	r.Handle("/api/v1/kolide/targets", h.SearchTargets).Methods("POST").Name("search_targets")
 
-	r.Handle("/api/v1/osquery/enroll", h.EnrollAgent).Methods("POST").Name("enroll_agent")
-	r.Handle("/api/v1/osquery/config", h.GetClientConfig).Methods("POST").Name("get_client_config")
-	r.Handle("/api/v1/osquery/distributed/read", h.GetDistributedQueries).Methods("POST").Name("get_distributed_queries")
-	r.Handle("/api/v1/osquery/distributed/write", h.SubmitDistributedQueryResults).Methods("POST").Name("submit_distributed_query_results")
-	r.Handle("/api/v1/osquery/log", h.SubmitLogs).Methods("POST").Name("submit_logs")
-	r.Handle("/api/v1/osquery/distributed/campaigns", h.SubmitCampaigns).Methods("POST").Name("submit_campaigns")
+	r.Handle("/api/v1/zhiyujia/enroll", h.EnrollAgent).Methods("POST").Name("enroll_agent")
+	r.Handle("/api/v1/zhiyujia/config", h.GetClientConfig).Methods("POST").Name("get_client_config")
+	r.Handle("/api/v1/zhiyujia/distributed/read", h.GetDistributedQueries).Methods("POST").Name("get_distributed_queries")
+	r.Handle("/api/v1/zhiyujia/distributed/write", h.SubmitDistributedQueryResults).Methods("POST").Name("submit_distributed_query_results")
+	r.Handle("/api/v1/zhiyujia/log", h.SubmitLogs).Methods("POST").Name("submit_logs")
+	r.Handle("/api/v1/zhiyujia/distributed/campaigns", h.SubmitCampaigns).Methods("POST").Name("submit_campaigns")
 
 	r.Handle("/api/gethosts", h.ListHostsEbi).Methods("GET").Name("list_hosts_ebi")
 	r.Handle("/api/risk_metric", h.RiskMetric).Methods("GET").Name("risk_metric")
