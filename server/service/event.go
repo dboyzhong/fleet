@@ -137,6 +137,7 @@ type eventMiddleware struct {
 	pf      *push.Platform
 	re      *rulesEngine
 	bs      *pubsub.BashResults
+	ticker  *time.Ticker
 	startSeq int64
 }
 
@@ -145,8 +146,13 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 	msg, _ := json.Marshal(a)
 	audience := push.NewAudience() 
 	audience.SetAlias([]string{a.Uid})
-	ew.logger.Log("-------------uid: ", a.Uid)
-	iosNotification := push.NewIosNotification("Ebi Alert")
+	var titleContent string
+	for _, elem := range a.Data {
+		titleContent += elem.Title
+		titleContent += "\n"
+	}
+	ew.logger.Log("uid: ", a.Uid, "title content: ", titleContent)
+	iosNotification := push.NewIosNotification(titleContent)
     iosNotification.Badge = 1
     iosNotification.ContentAvailable = true
 	iosNotification.AddExtra("Alarm", string(msg))
@@ -185,6 +191,7 @@ func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logg
 		pf: &push.Platform{},
 		re: newRulesEngine(context.Background(), bs, logger),
 		bs: bs,
+		ticker: time.NewTicker(10 * time.Second),
 		startSeq: time.Now().Unix(),
 	}
 	s.pf.Add("ios", "android")
@@ -287,6 +294,17 @@ func (ew eventMiddleware) AlarmRoutine() {
 				}
 			} else {
 				return
+			}
+		case <- ew.ticker.C:
+			alarms, err := ew.getAlarm(0)
+			if err == nil {
+				for _, v := range alarms {
+					ew.logger.Log("info", "ticker repush failed event: ", v.Uid, v.EventId)
+					if nil == ew.push(v) {
+						ew.logger.Log("info", "ticker update alarm with staus 1", v.Uid, v.EventId)
+						ew.update(v, 1)
+					}
+				}
 			}
 		}
 	}
