@@ -156,7 +156,7 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 	
 	options := push.NewOptions()
     options.TimeToLive = 10000000
-    options.ApnsProduction = false
+    options.ApnsProduction = true
 	
 	payload := push.NewPushObject()
     payload.Platform = ew.pf
