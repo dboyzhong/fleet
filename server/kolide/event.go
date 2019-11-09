@@ -61,15 +61,15 @@ type SmtpServer struct {
 }
 
 type BannerInf struct {
-	Uid        string  `db:"uid"`
-	HostUUID   string  `db:"host_uid"`
-	Time       time.Time  `db:"timestamp"`
-	Address    string  `db:"address"`
-	Service    string  `db:"service"`
-	Status     string  `db:"status"`
-	Banner     string  `db:"banner"`
-	Version    string  `db:"version"`
-	ScriptRes  string  `db:"script_res"`
+	Uid        string  `json:"uid"              db:"uid"`
+	HostUUID   string  `json:"host_uuid"        db:"host_uuid"`
+	Time       time.Time  `json:"time"          db:"time"`
+	Address    string  `json:"address"         db:"address"`
+	Service    string  `json:"service"         db:"service"`
+	Status     string  `json:"state"           db:"state"`
+	Banner     string  `json:"banner"          db:"banner"`
+	Version    string  `json:"version"         db:"version"`
+	ScriptRes  string  `json:"script_results"  db:"script_res"`
 }
 
 type EventDetails EventHistory
