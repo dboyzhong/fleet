@@ -257,3 +257,7 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 	content[0].IOC = ioc
 	return content[0], nil
 }
+
+func (d *Datastore) BannerInf(uid, host_uuid string) (*kolide.BannerInf, error) {
+	return nil, nil
+}

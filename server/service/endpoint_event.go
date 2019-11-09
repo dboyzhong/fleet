@@ -52,6 +52,16 @@ type eventDetailsResponse struct {
 	Err         error                 `json:"error,omitempty"`
 }
 
+type eventBannerInfRequest struct {
+	Uid string      `json:"uid"`
+	HostUUID string `json:"host_uuid"`
+}
+
+type eventBannerInfResponse struct {
+	BannerInf *kolide.BannerInf `json:"banner_inf ,omitempty"`
+	Err    error    `json:"error,omitempty"`
+}
+
 func (r riskMetricResponse) error() error { return r.Err }
 
 func makeRiskMetricEndpoint(svc kolide.Service) endpoint.Endpoint {
@@ -95,5 +105,16 @@ func makeEventDetailsEndpoint(svc kolide.Service) endpoint.Endpoint {
 			return eventDetailsResponse{Err: err}, nil
 		}
 		return eventDetailsResponse{EventDetails: result, Err:nil}, nil
+	}
+}
+
+func makeEventBannerInfEndpoint(svc kolide.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(eventBannerInfRequest)
+		result, err := svc.BannerInf(ctx, req.Uid, req.HostUUID)
+		if err != nil {
+			return eventBannerInfResponse{Err: err}, nil
+		}
+		return eventBannerInfResponse{BannerInf: result, Err:nil}, nil
 	}
 }

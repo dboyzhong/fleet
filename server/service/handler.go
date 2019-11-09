@@ -102,6 +102,7 @@ type KolideEndpoints struct {
 	SetEventStatus                        endpoint.Endpoint
 	EventHistory                          endpoint.Endpoint
 	EventDetails                          endpoint.Endpoint
+	BannerInf                             endpoint.Endpoint
 }
 
 // MakeKolideServerEndpoints creates the Kolide API endpoints.
@@ -207,6 +208,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		SetEventStatus:                makeSetEventStatusEndpoint(svc),
 		EventHistory:                  makeEventHistoryEndpoint(svc),
 		EventDetails:                  makeEventDetailsEndpoint(svc),
+		BannerInf:                     makeEventDetailsEndpoint(svc),
 	}
 }
 
@@ -298,6 +300,7 @@ type kolideHandlers struct {
 	SetEventStatus                        http.Handler
 	EventHistory                          http.Handler
 	EventDetails                          http.Handler
+	BannerInf                             http.Handler
 }
 
 func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *kolideHandlers {
@@ -393,6 +396,7 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		SetEventStatus:                        newServer(e.SetEventStatus, decodeSetEventStatusRequest),
 		EventHistory:                          newServer(e.EventHistory, decodeEventHistoryRequest),
 		EventDetails:                          newServer(e.EventDetails, decodeEventDetailsRequest),
+		BannerInf:                             newServer(e.BannerInf, decodeEventBannerInf),
 	}
 }
 
@@ -534,6 +538,7 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/set_event_status", h.SetEventStatus).Methods("POST").Name("set_event_status")
 	r.Handle("/api/event_history", h.EventHistory).Methods("GET").Name("event_history")
 	r.Handle("/api/event_details", h.EventDetails).Methods("GET").Name("event_details")
+	r.Handle("/api/banner_inf", h.BannerInf).Methods("GET").Name("banner_inf")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.

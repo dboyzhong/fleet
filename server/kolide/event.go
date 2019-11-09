@@ -51,6 +51,27 @@ type EventHistory struct {
 	Status  int           `json:"status"   db:"status"`
 }
 
+type SmtpServer struct {
+	Uid        string   `db:"uid"`
+	ServerAddr string   `db:"smtp_server"`
+	ServerPort int      `db:"smtp_server_port"`
+	User       string   `db:"smtp_user"`
+	Passwd     string   `db:"smtp_passwd"`
+	Emails     []string
+}
+
+type BannerInf struct {
+	Uid        string  `db:"uid"`
+	HostUUID   string  `db:"host_uid"`
+	Time       time.Time  `db:"timestamp"`
+	Address    string  `db:"address"`
+	Service    string  `db:"service"`
+	Status     string  `db:"status"`
+	Banner     string  `db:"banner"`
+	Version    string  `db:"version"`
+	ScriptRes  string  `db:"script_res"`
+}
+
 type EventDetails EventHistory
 
 type EventStore interface {
@@ -60,6 +81,7 @@ type EventStore interface {
 	GetAlarm(status int) ([]*Alarm, error)
 	EventHistory(uid, sort string, start, end, level, status int64) ([]*EventHistory, error)
 	EventDetails(uid, event_id string) (*EventDetails, error)
+	BannerInf(uid, host_uuid string) (*BannerInf, error)
 }
 
 type EventService interface {
@@ -67,4 +89,5 @@ type EventService interface {
 	SetEventStatus(ctx context.Context, uid, eventId string, status int) (string, error)
 	EventHistory(ctx context.Context, uid, sort string, start, end, level, status int64) ([]*EventHistory, error)
 	EventDetails(ctx context.Context, uid, event_id string) (*EventDetails, error)
+	BannerInf(ctx context.Context, uid, host_uuid string) (*BannerInf, error)
 }

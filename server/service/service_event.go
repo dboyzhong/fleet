@@ -19,3 +19,7 @@ func (svc service) EventHistory(ctx context.Context, uid, sort string, start, en
 func (svc service) EventDetails(ctx context.Context, uid, event_id string) (*kolide.EventDetails, error) {
 	return svc.ds.EventDetails(uid, event_id)
 }
+
+func (svc service) BannerInf(ctx context.Context, uid, host_uuid string) (*kolide.BannerInf, error) {
+	return svc.ds.BannerInf(uid, host_uuid)
+}
