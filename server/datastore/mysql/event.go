@@ -259,5 +259,25 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 }
 
 func (d *Datastore) BannerInf(uid, host_uuid string) (*kolide.BannerInf, error) {
-	return nil, nil
+
+	sqlStatement := `
+		SELECT uid, host_uuid, time, address, service, banner, version, script_res FROM banner_inf 
+		WHERE uid = ? and host_uuid = ? LIMIT 1
+	`
+    var content []*kolide.BannerInf
+    err := d.db.Select(&content, sqlStatement, uid, host_uuid)
+    if err != nil {
+    	fmt.Println("get banner inf error: ", err)
+    	time.Sleep(time.Second)
+    	err = d.db.Select(&content, sqlStatement, uid, host_uuid)
+    	if err != nil {
+    		return nil, errors.Wrap(err, "get banner inf")
+    	}
+	}
+	
+	if (nil != content) && (len(content) > 0) {
+    	return content[0], nil
+	} else {
+		return nil, errors.Wrap(errors.New("no banner info found"), "get banner inf")
+	}
 }

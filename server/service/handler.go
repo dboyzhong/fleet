@@ -208,7 +208,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		SetEventStatus:                makeSetEventStatusEndpoint(svc),
 		EventHistory:                  makeEventHistoryEndpoint(svc),
 		EventDetails:                  makeEventDetailsEndpoint(svc),
-		BannerInf:                     makeEventDetailsEndpoint(svc),
+		BannerInf:                     makeEventBannerInfEndpoint(svc),
 	}
 }
 

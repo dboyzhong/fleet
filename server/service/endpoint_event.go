@@ -62,6 +62,8 @@ type eventBannerInfResponse struct {
 	Err    error    `json:"error,omitempty"`
 }
 
+func (r eventBannerInfResponse) error() error { return r.Err }
+
 func (r riskMetricResponse) error() error { return r.Err }
 
 func makeRiskMetricEndpoint(svc kolide.Service) endpoint.Endpoint {
