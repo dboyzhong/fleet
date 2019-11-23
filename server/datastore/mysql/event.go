@@ -317,3 +317,29 @@ func (d *Datastore) PropertyCfg(uid string) (*kolide.PropertyCfg, error) {
 		return nil, errors.Wrap(errors.New("no banner info found"), "get banner inf")
 	}
 }
+
+func (d *Datastore) PropertyResult(uid, host_uuid, results string, ts time.Time) (*kolide.PropertyResult, error) {
+
+	res := kolide.PropertyResult{}
+
+	sqlStatement := `
+	INSERT INTO banner_result(
+		uid,
+		host_uuid,
+		results,
+		time
+	)
+	VALUES( ?,?,?,? )
+	`
+	_, err := d.db.Exec(sqlStatement, uid, host_uuid, results, ts);
+	if err != nil {
+		time.Sleep(time.Second)
+		_, err = d.db.Exec(sqlStatement, uid, host_uuid, results, ts);
+	}
+
+	if err != nil {
+		res.Code = -1
+		return &res, err
+	}
+	return &res, nil;
+}

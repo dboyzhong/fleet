@@ -16,6 +16,7 @@ import (
 	_"crypto/md5"
 	"strconv"
 	"fmt"
+	"io/ioutil"
 )
 
 type rulesEngine struct {
@@ -279,6 +280,24 @@ func decodeEventBannerInf(ctx context.Context, r *http.Request) (interface{}, er
 func decodePropertyCfg(ctx context.Context, r *http.Request) (interface{}, error) {
 	uid   := r.URL.Query().Get("uid")
 	return eventPropertyCfgRequest{Uid: uid}, nil
+}
+
+func decodePropertyResult(ctx context.Context, r *http.Request) (interface{}, error) {
+
+	defer r.Body.Close()
+	res, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	req := eventPropertyResultRequest{}
+	err = json.Unmarshal(res, &req)
+	if err != nil {
+		//return nil, errors.New("wrong param")
+		return nil, err
+	}
+
+	return req, nil
 }
 
 

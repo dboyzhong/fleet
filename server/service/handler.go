@@ -104,6 +104,7 @@ type KolideEndpoints struct {
 	EventDetails                          endpoint.Endpoint
 	BannerInf                             endpoint.Endpoint
 	PropertyCfg                           endpoint.Endpoint
+	PropertyResult                        endpoint.Endpoint
 }
 
 // MakeKolideServerEndpoints creates the Kolide API endpoints.
@@ -211,6 +212,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		EventDetails:                  makeEventDetailsEndpoint(svc),
 		BannerInf:                     makeEventBannerInfEndpoint(svc),
 		PropertyCfg:                   makePropertyCfgEndpoint(svc),
+		PropertyResult:                makePropertyResultEndpoint(svc),
 	}
 }
 
@@ -304,6 +306,7 @@ type kolideHandlers struct {
 	EventDetails                          http.Handler
 	BannerInf                             http.Handler
 	PropertyCfg                           http.Handler
+	PropertyResult                        http.Handler
 }
 
 func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *kolideHandlers {
@@ -401,6 +404,7 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		EventDetails:                          newServer(e.EventDetails, decodeEventDetailsRequest),
 		BannerInf:                             newServer(e.BannerInf, decodeEventBannerInf),
 		PropertyCfg:                           newServer(e.PropertyCfg, decodePropertyCfg),
+		PropertyResult:                        newServer(e.PropertyResult, decodePropertyResult),
 	}
 }
 
@@ -544,6 +548,7 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/event_details", h.EventDetails).Methods("GET").Name("event_details")
 	r.Handle("/api/banner_inf", h.BannerInf).Methods("GET").Name("banner_inf")
 	r.Handle("/api/property_cfg", h.PropertyCfg).Methods("GET").Name("property_cfg")
+	r.Handle("/api/property_result", h.PropertyResult).Methods("POST").Name("property_result")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.

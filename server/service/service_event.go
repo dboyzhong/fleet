@@ -1,6 +1,7 @@
 package service
 
 import (
+	"time"
 	"context"
 	"github.com/kolide/fleet/server/kolide"
 )
@@ -26,4 +27,8 @@ func (svc service) BannerInf(ctx context.Context, uid, host_uuid string) (*kolid
 
 func (svc service) PropertyCfg(ctx context.Context, uid string) (*kolide.PropertyCfg, error) {
 	return svc.ds.PropertyCfg(uid)
+}
+
+func (svc service) PropertyResult(ctx context.Context, uid, host_uuid, results string, ts time.Time) (*kolide.PropertyResult, error) {
+	return svc.ds.PropertyResult(uid, host_uuid, results, ts)
 }

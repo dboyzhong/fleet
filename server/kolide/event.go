@@ -78,6 +78,10 @@ type PropertyCfg struct {
 	Args    []string `json:"args"          db:"args"`
 }
 
+type PropertyResult struct {
+	Code int `json:"code"`
+}
+
 type EventDetails EventHistory
 
 type EventStore interface {
@@ -89,6 +93,7 @@ type EventStore interface {
 	EventDetails(uid, event_id string) (*EventDetails, error)
 	BannerInf(uid, host_uuid string) (*BannerInf, error)
 	PropertyCfg(uid string) (*PropertyCfg, error)
+	PropertyResult(uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
 }
 
 type EventService interface {
@@ -98,4 +103,5 @@ type EventService interface {
 	EventDetails(ctx context.Context, uid, event_id string) (*EventDetails, error)
 	BannerInf(ctx context.Context, uid, host_uuid string) (*BannerInf, error)
 	PropertyCfg(ctx context.Context, uid string) (*PropertyCfg, error)
+	PropertyResult(ctx context.Context, uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
 }
