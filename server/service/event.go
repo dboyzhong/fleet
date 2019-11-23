@@ -276,6 +276,11 @@ func decodeEventBannerInf(ctx context.Context, r *http.Request) (interface{}, er
 	return eventBannerInfRequest{Uid: uid, HostUUID: host_uuid}, nil
 }
 
+func decodePropertyCfg(ctx context.Context, r *http.Request) (interface{}, error) {
+	uid   := r.URL.Query().Get("uid")
+	return eventPropertyCfgRequest{Uid: uid}, nil
+}
+
 
 func (ew eventMiddleware) AlarmRoutine() {
 	for {

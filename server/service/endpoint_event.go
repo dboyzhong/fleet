@@ -62,6 +62,17 @@ type eventBannerInfResponse struct {
 	Err    error    `json:"error,omitempty"`
 }
 
+type eventPropertyCfgRequest struct {
+	Uid string      `json:"uid"`
+}
+
+type eventPropertyCfgResponse struct {
+	PropertyCfg *kolide.PropertyCfg `json:"config,omitempty"`
+	Err    error    `json:"error,omitempty"`
+}
+
+func (r eventPropertyCfgResponse) error() error { return r.Err }
+
 func (r eventBannerInfResponse) error() error { return r.Err }
 
 func (r riskMetricResponse) error() error { return r.Err }
@@ -118,5 +129,16 @@ func makeEventBannerInfEndpoint(svc kolide.Service) endpoint.Endpoint {
 			return eventBannerInfResponse{Err: err}, nil
 		}
 		return eventBannerInfResponse{BannerInf: result, Err:nil}, nil
+	}
+}
+
+func makePropertyCfgEndpoint(svc kolide.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(eventPropertyCfgRequest)
+		result, err := svc.PropertyCfg(ctx, req.Uid)
+		if err != nil {
+			return eventPropertyCfgResponse{Err: err}, nil
+		}
+		return eventPropertyCfgResponse{PropertyCfg: result, Err:nil}, nil
 	}
 }

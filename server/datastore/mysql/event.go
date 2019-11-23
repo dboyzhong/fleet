@@ -8,6 +8,7 @@ import (
 	_"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"encoding/json"
+	"strings"
 )
 
 var (
@@ -31,6 +32,12 @@ var (
 	riskMetricLevel0Minus = 3
 	riskMetricLevel0Limit = 20
 )
+
+type PropertyCfgDB struct {
+	Targets string `db:"targets"`
+	Ports   string `db:"ports"`
+	Args    string `db:"args"`
+}		
 
 func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) (error) {
 	sqlStatement := `
@@ -277,6 +284,35 @@ func (d *Datastore) BannerInf(uid, host_uuid string) (*kolide.BannerInf, error) 
 	
 	if (nil != content) && (len(content) > 0) {
     	return content[0], nil
+	} else {
+		return nil, errors.Wrap(errors.New("no banner info found"), "get banner inf")
+	}
+}
+
+func (d *Datastore) PropertyCfg(uid string) (*kolide.PropertyCfg, error) {
+
+	sqlStatement := `
+		SELECT targets, ports, args FROM banner_cfg 
+		WHERE uid = ? LIMIT 1
+	`
+    var content []*PropertyCfgDB
+	ret := kolide.PropertyCfg{}
+
+    err := d.db.Select(&content, sqlStatement, uid)
+    if err != nil {
+    	fmt.Println("get banner cfg error: ", err)
+    	time.Sleep(time.Second)
+    	err = d.db.Select(&content, sqlStatement, uid)
+    	if err != nil {
+    		return nil, errors.Wrap(err, "get banner cfg")
+    	}
+	}
+	
+	if (nil != content) && (len(content) > 0) {
+		ret.Targets = strings.Split(content[0].Targets, ",")
+		ret.Ports = content[0].Ports
+		ret.Args = strings.Split(content[0].Args, ",")
+		return &ret, nil
 	} else {
 		return nil, errors.Wrap(errors.New("no banner info found"), "get banner inf")
 	}

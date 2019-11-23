@@ -103,6 +103,7 @@ type KolideEndpoints struct {
 	EventHistory                          endpoint.Endpoint
 	EventDetails                          endpoint.Endpoint
 	BannerInf                             endpoint.Endpoint
+	PropertyCfg                           endpoint.Endpoint
 }
 
 // MakeKolideServerEndpoints creates the Kolide API endpoints.
@@ -209,6 +210,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		EventHistory:                  makeEventHistoryEndpoint(svc),
 		EventDetails:                  makeEventDetailsEndpoint(svc),
 		BannerInf:                     makeEventBannerInfEndpoint(svc),
+		PropertyCfg:                   makePropertyCfgEndpoint(svc),
 	}
 }
 
@@ -301,6 +303,7 @@ type kolideHandlers struct {
 	EventHistory                          http.Handler
 	EventDetails                          http.Handler
 	BannerInf                             http.Handler
+	PropertyCfg                           http.Handler
 }
 
 func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *kolideHandlers {
@@ -397,6 +400,7 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		EventHistory:                          newServer(e.EventHistory, decodeEventHistoryRequest),
 		EventDetails:                          newServer(e.EventDetails, decodeEventDetailsRequest),
 		BannerInf:                             newServer(e.BannerInf, decodeEventBannerInf),
+		PropertyCfg:                           newServer(e.PropertyCfg, decodePropertyCfg),
 	}
 }
 
@@ -539,6 +543,7 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/event_history", h.EventHistory).Methods("GET").Name("event_history")
 	r.Handle("/api/event_details", h.EventDetails).Methods("GET").Name("event_details")
 	r.Handle("/api/banner_inf", h.BannerInf).Methods("GET").Name("banner_inf")
+	r.Handle("/api/property_cfg", h.PropertyCfg).Methods("GET").Name("property_cfg")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.

@@ -72,6 +72,12 @@ type BannerInf struct {
 	ScriptRes  string  `json:"script_results"  db:"script_res"`
 }
 
+type PropertyCfg struct {
+	Targets []string `json:"targets"       db:"targets"`
+	Ports   string   `json:"port"          db:"ports"`
+	Args    []string `json:"args"          db:"args"`
+}
+
 type EventDetails EventHistory
 
 type EventStore interface {
@@ -82,6 +88,7 @@ type EventStore interface {
 	EventHistory(uid, sort string, start, end, level, status int64) ([]*EventHistory, error)
 	EventDetails(uid, event_id string) (*EventDetails, error)
 	BannerInf(uid, host_uuid string) (*BannerInf, error)
+	PropertyCfg(uid string) (*PropertyCfg, error)
 }
 
 type EventService interface {
@@ -90,4 +97,5 @@ type EventService interface {
 	EventHistory(ctx context.Context, uid, sort string, start, end, level, status int64) ([]*EventHistory, error)
 	EventDetails(ctx context.Context, uid, event_id string) (*EventDetails, error)
 	BannerInf(ctx context.Context, uid, host_uuid string) (*BannerInf, error)
+	PropertyCfg(ctx context.Context, uid string) (*PropertyCfg, error)
 }
