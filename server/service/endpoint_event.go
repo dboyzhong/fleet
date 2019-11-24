@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"time"
-
+	"encoding/json"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/kolide/fleet/server/kolide"
 )
@@ -74,7 +74,7 @@ type eventPropertyCfgResponse struct {
 type eventPropertyResultRequest struct {
 	Uid string      `json:"uid"`
 	HostUUID string `json:"host_uuid"`
-	Results  string `json:"results"`
+	Results  json.RawMessage `json:"results"`
 	Ts   time.Time  `json:"ts"`
 }
 
@@ -158,7 +158,7 @@ func makePropertyCfgEndpoint(svc kolide.Service) endpoint.Endpoint {
 func makePropertyResultEndpoint(svc kolide.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(eventPropertyResultRequest)
-		result, err := svc.PropertyResult(ctx, req.Uid, req.HostUUID, req.Results, req.Ts)
+		result, err := svc.PropertyResult(ctx, req.Uid, req.HostUUID, string(req.Results), req.Ts)
 		if err != nil {
 			return eventPropertyResultResponse{Err: err}, nil
 		}
