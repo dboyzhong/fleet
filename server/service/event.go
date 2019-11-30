@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"fmt"
 	"io/ioutil"
+	"net/smtp"
 )
 
 type rulesEngine struct {
@@ -140,6 +141,36 @@ type eventMiddleware struct {
 	bs      *pubsub.BashResults
 	ticker  *time.Ticker
 	startSeq int64
+	smtpCfg map[string]*kolide.SmtpConfig
+	smtpTicker  *time.Ticker
+}
+
+func (ew eventMiddleware) sendEmails(uid string, msg []byte) {
+	if _, ok := ew.smtpCfg[uid]; !ok {
+		if cfg, err := ew.ds.GetEventEmailCfg(uid); err != nil {
+			ew.logger.Log("err: ", "get event email cfg error, uid: ", uid, "err: ", err)
+			return
+		} else {
+			ew.smtpCfg[uid] = cfg
+		}
+	}
+	auth := smtp.PlainAuth(
+		"",
+		ew.smtpCfg[uid].User,
+		ew.smtpCfg[uid].Passwd,
+		ew.smtpCfg[uid].ServerAddr,
+	)
+
+	err := smtp.SendMail(
+			ew.smtpCfg[uid].ServerAddr + ":" + strconv.Itoa(ew.smtpCfg[uid].ServerPort),
+			auth,
+			ew.smtpCfg[uid].User,
+			ew.smtpCfg[uid].Emails,
+			msg,
+	)
+	if err != nil {
+			ew.logger.Log("send email failed, uid: ", uid, "err: ", err)
+	}
 }
 
 func (ew eventMiddleware) push(a *kolide.Alarm) error {
@@ -194,6 +225,8 @@ func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logg
 		bs: bs,
 		ticker: time.NewTicker(10 * time.Second),
 		startSeq: time.Now().Unix(),
+		smtpCfg : make(map[string]*kolide.SmtpConfig),
+		smtpTicker : time.NewTicker(10 * time.Minute),
 	}
 	s.pf.Add("ios", "android")
 	s.jclient.SetDebug(true)
@@ -335,6 +368,15 @@ func (ew eventMiddleware) AlarmRoutine() {
 						ew.logger.Log("info", "ticker update alarm with staus 1", v.Uid, v.EventId)
 						ew.update(v, 1)
 					}
+				}
+			}
+		case <- ew.smtpTicker.C:
+			for k, v := range ew.smtpCfg {
+				cfg, err := ew.ds.GetEventEmailCfg(v.Uid)
+				if nil == err {
+					ew.smtpCfg[k] = cfg
+				} else {
+					ew.logger.Log("info", "smtp ticker load event cfg error, uid: ", v.Uid, "err: ", err)
 				}
 			}
 		}

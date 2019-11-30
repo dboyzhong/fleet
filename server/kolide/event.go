@@ -51,7 +51,7 @@ type EventHistory struct {
 	Status  int           `json:"status"   db:"status"`
 }
 
-type SmtpServer struct {
+type SmtpConfig struct {
 	Uid        string   `db:"uid"`
 	ServerAddr string   `db:"smtp_server"`
 	ServerPort int      `db:"smtp_server_port"`
@@ -94,6 +94,7 @@ type EventStore interface {
 	BannerInf(uid, host_uuid string) (*BannerInf, error)
 	PropertyCfg(uid string) (*PropertyCfg, error)
 	PropertyResult(uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
+	GetEventEmailCfg(uid string) (*SmtpConfig, error)
 }
 
 type EventService interface {

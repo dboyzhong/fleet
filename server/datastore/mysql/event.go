@@ -173,6 +173,46 @@ func (d* Datastore) GetAlarm(status int) ([]*kolide.Alarm, error) {
 	return content, nil
 }
 
+func (d *Datastore) GetEventEmailCfg(uid string) (*kolide.SmtpConfig, error) {
+
+	sqlStatement := `
+		SELECT uid, smtp_server, smtp_server_port, smtp_user, smtp_passwd FROM event_config 
+		WHERE uid = ? LIMIT 1
+	`
+	var content []*kolide.SmtpConfig
+	err := d.db.Select(&content, sqlStatement, uid)
+	if err != nil {
+		fmt.Println("get event_config error: ", err)
+		time.Sleep(time.Second)
+		err = d.db.Select(&content, sqlStatement, uid)
+		if err != nil {
+			return nil, errors.Wrap(err, "get event config")
+		}
+	}
+
+	if (nil != content) && (len(content) > 0) {
+
+		sqlStatement := `
+			SELECT email FROM event_customers_inf 
+			WHERE uid = ?
+		`
+		var emails []string
+		err := d.db.Select(&emails, sqlStatement, uid)
+		if err != nil {
+			fmt.Println("get event_customers_inf error: ", err)
+			time.Sleep(time.Second)
+			err = d.db.Select(&emails, sqlStatement, uid)
+			if err != nil {
+				return nil, errors.Wrap(err, "get event customers_inf")
+			}
+		}
+		content[0].Emails = emails	
+		return content[0], nil
+	} else {
+		return nil, errors.Wrap(err, "get event config, no record")
+	}
+}
+
 func (d* Datastore) EventHistory(uid, sort string, start, end, level, status int64) ([]*kolide.EventHistory, error) {
 
 	var sqlStatement string
