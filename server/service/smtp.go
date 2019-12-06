@@ -5,11 +5,10 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
-	kitlog "github.com/go-kit/kit/log"
 )
 
 //Client simple email client support ssl
-type Client struct {
+type SmtpClient struct {
 	user     string
 	addr     string
 	nickName string
@@ -18,8 +17,8 @@ type Client struct {
 }
 
 //New new email client
-func NewSmtpClient(user, password, nickName, host string, port int, isSsl bool) *Client {
-	ec := &Client{
+func NewSmtpClient(user, password, nickName, host string, port int, isSsl bool) *SmtpClient {
+	ec := &SmtpClient{
 		user:  user,
 		addr:  fmt.Sprintf("%s:%d", host, port),
 		isSSL: isSsl,
@@ -33,17 +32,17 @@ func NewSmtpClient(user, password, nickName, host string, port int, isSsl bool) 
 	return ec
 }
 
-func (ec *Client) generateEmailMsg(toUser []string, subject, content string) []byte {
+func (ec *SmtpClient) generateEmailMsg(toUser []string, subject, content string) []byte {
 	return ec.generateEmailMsgByte(toUser, subject, []byte(content))
 }
 
-func (ec *Client) generateEmailMsgByte(toUser []string, subject string, body []byte) []byte {
+func (ec *SmtpClient) generateEmailMsgByte(toUser []string, subject string, body []byte) []byte {
 	msgStr := fmt.Sprintf("To: %s\r\nFrom: %s<%s>\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n",
 		strings.Join(toUser, ","), ec.nickName, ec.user, subject)
 	return append([]byte(msgStr), body...)
 }
 
-func (ec *Client) sendMailTLS(toUser []string, msg []byte) error {
+func (ec *SmtpClient) sendMailTLS(toUser []string, msg []byte) error {
 	host, _, _ := net.SplitHostPort(ec.addr)
 	tlsconfig := &tls.Config{
 		InsecureSkipVerify: true,
@@ -89,12 +88,12 @@ func (ec *Client) sendMailTLS(toUser []string, msg []byte) error {
 	return client.Quit()
 }
 
-func (ec *Client) sendMail(toUser []string, msg []byte) error {
+func (ec *SmtpClient) sendMail(toUser []string, msg []byte) error {
 	return smtp.SendMail(ec.addr, ec.auth, ec.user, toUser, msg)
 }
 
 //SendEmail send email by string content
-func (ec *Client) SendEmail(toUser []string, subject string, content string) error {
+func (ec *SmtpClient) SendEmail(toUser []string, subject string, content string) error {
 	msg := ec.generateEmailMsg(toUser, subject, content)
 	if ec.isSSL {
 		return ec.sendMailTLS(toUser, msg)
@@ -103,7 +102,7 @@ func (ec *Client) SendEmail(toUser []string, subject string, content string) err
 }
 
 //SendEmailByte send email by byte body
-func (ec *Client) SendEmailByte(toUser []string, subject string, body []byte) error {
+func (ec *SmtpClient) SendEmailByte(toUser []string, subject string, body []byte) error {
 	msg := ec.generateEmailMsgByte(toUser, subject, body)
 	if ec.isSSL {
 		return ec.sendMailTLS(toUser, msg)

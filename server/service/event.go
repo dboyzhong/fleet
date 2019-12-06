@@ -17,7 +17,6 @@ import (
 	"strconv"
 	"fmt"
 	"io/ioutil"
-	"net/smtp"
 )
 
 type rulesEngine struct {
@@ -145,9 +144,12 @@ type eventMiddleware struct {
 	smtpTicker  *time.Ticker
 }
 
-func (ew eventMiddleware) sendEmails(uid string, msg []byte) {
+func (ew eventMiddleware) sendEmails(uid string, msg string) {
+
+	var cfg *kolide.SmtpConfig
+	var err error
 	if _, ok := ew.smtpCfg[uid]; !ok {
-		if cfg, err := ew.ds.GetEventEmailCfg(uid); err != nil {
+		if cfg, err = ew.ds.GetEventEmailCfg(uid); err != nil {
 			ew.logger.Log("err: ", "get event email cfg error, uid: ", uid, "err: ", err)
 			return
 		}
@@ -199,7 +201,7 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 		ew.logger.Log("err", "push success: ", result)
 	}
 
-	sendEmails(a.Uid, msg)
+	ew.sendEmails(a.Uid, string(msg))
 	return err
 }
 
