@@ -150,26 +150,16 @@ func (ew eventMiddleware) sendEmails(uid string, msg []byte) {
 		if cfg, err := ew.ds.GetEventEmailCfg(uid); err != nil {
 			ew.logger.Log("err: ", "get event email cfg error, uid: ", uid, "err: ", err)
 			return
-		} else {
-			ew.smtpCfg[uid] = cfg
 		}
+		ew.smtpCfg[uid] = cfg
 	}
-	auth := smtp.PlainAuth(
-		"",
-		ew.smtpCfg[uid].User,
-		ew.smtpCfg[uid].Passwd,
-		ew.smtpCfg[uid].ServerAddr,
-	)
 
-	err := smtp.SendMail(
-			ew.smtpCfg[uid].ServerAddr + ":" + strconv.Itoa(ew.smtpCfg[uid].ServerPort),
-			auth,
-			ew.smtpCfg[uid].User,
-			ew.smtpCfg[uid].Emails,
-			msg,
-	)
-	if err != nil {
-			ew.logger.Log("send email failed, uid: ", uid, "err: ", err)
+	client := NewSmtpClient(ew.smtpCfg[uid].User, ew.smtpCfg[uid].Passwd, 
+		ew.smtpCfg[uid].User, ew.smtpCfg[uid].ServerAddr, ew.smtpCfg[uid].ServerPort, true)
+	if err := client.SendEmail(ew.smtpCfg[uid].Emails, "Ebi Alert", msg); err != nil {
+		ew.logger.Log("send email failed, uid: ", uid, "err: ", err)
+	} else {
+		ew.logger.Log("send email success, uid: ", uid)
 	}
 }
 
@@ -208,6 +198,8 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 	} else {
 		ew.logger.Log("err", "push success: ", result)
 	}
+
+	sendEmails(a.Uid, msg)
 	return err
 }
 
