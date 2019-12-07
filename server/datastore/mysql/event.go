@@ -206,10 +206,14 @@ func (d *Datastore) GetEventEmailCfg(uid string) (*kolide.SmtpConfig, error) {
 				return nil, errors.Wrap(err, "get event customers_inf")
 			}
 		}
-		content[0].Emails = emails	
-		return content[0], nil
+		if (nil != emails) && (len(emails) > 0) {
+			content[0].Emails = emails	
+			return content[0], nil
+		} else {
+			return nil, errors.New("get event_customers_inf err: no record")
+		}
 	} else {
-		return nil, errors.Wrap(err, "get event config, no record")
+		return nil, errors.New("get event config err: no record")
 	}
 }
 
