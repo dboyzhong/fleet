@@ -25,6 +25,10 @@ func (svc service) BannerInf(ctx context.Context, uid, host_uuid string) (*kolid
 	return svc.ds.BannerInf(uid, host_uuid)
 }
 
+func (svc service) BannerInf2(ctx context.Context, uid string) (*kolide.BannerInf2, error) {
+	return svc.ds.BannerInf2(uid)
+}
+
 func (svc service) PropertyCfg(ctx context.Context, uid string) (*kolide.PropertyCfg, error) {
 	return svc.ds.PropertyCfg(uid)
 }

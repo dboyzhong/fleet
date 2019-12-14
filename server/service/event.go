@@ -304,6 +304,11 @@ func decodeEventBannerInf(ctx context.Context, r *http.Request) (interface{}, er
 	return eventBannerInfRequest{Uid: uid, HostUUID: host_uuid}, nil
 }
 
+func decodeEventBannerInf2(ctx context.Context, r *http.Request) (interface{}, error) {
+	uid   := r.URL.Query().Get("uid")
+	return eventBannerInf2Request{Uid: uid}, nil
+}
+
 func decodePropertyCfg(ctx context.Context, r *http.Request) (interface{}, error) {
 	uid   := r.URL.Query().Get("uid")
 	return eventPropertyCfgRequest{Uid: uid}, nil

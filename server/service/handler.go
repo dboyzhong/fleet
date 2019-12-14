@@ -103,6 +103,7 @@ type KolideEndpoints struct {
 	EventHistory                          endpoint.Endpoint
 	EventDetails                          endpoint.Endpoint
 	BannerInf                             endpoint.Endpoint
+	BannerInf2                            endpoint.Endpoint
 	PropertyCfg                           endpoint.Endpoint
 	PropertyResult                        endpoint.Endpoint
 }
@@ -211,6 +212,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		EventHistory:                  makeEventHistoryEndpoint(svc),
 		EventDetails:                  makeEventDetailsEndpoint(svc),
 		BannerInf:                     makeEventBannerInfEndpoint(svc),
+		BannerInf2:                    makeEventBannerInf2Endpoint(svc),
 		PropertyCfg:                   makePropertyCfgEndpoint(svc),
 		PropertyResult:                makePropertyResultEndpoint(svc),
 	}
@@ -305,6 +307,7 @@ type kolideHandlers struct {
 	EventHistory                          http.Handler
 	EventDetails                          http.Handler
 	BannerInf                             http.Handler
+	BannerInf2                            http.Handler
 	PropertyCfg                           http.Handler
 	PropertyResult                        http.Handler
 }
@@ -403,6 +406,7 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		EventHistory:                          newServer(e.EventHistory, decodeEventHistoryRequest),
 		EventDetails:                          newServer(e.EventDetails, decodeEventDetailsRequest),
 		BannerInf:                             newServer(e.BannerInf, decodeEventBannerInf),
+		BannerInf2:                            newServer(e.BannerInf2, decodeEventBannerInf2),
 		PropertyCfg:                           newServer(e.PropertyCfg, decodePropertyCfg),
 		PropertyResult:                        newServer(e.PropertyResult, decodePropertyResult),
 	}
@@ -546,7 +550,8 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/set_event_status", h.SetEventStatus).Methods("POST").Name("set_event_status")
 	r.Handle("/api/event_history", h.EventHistory).Methods("GET").Name("event_history")
 	r.Handle("/api/event_details", h.EventDetails).Methods("GET").Name("event_details")
-	r.Handle("/api/banner_inf", h.BannerInf).Methods("GET").Name("banner_inf")
+	r.Handle("/api/banner_inf1", h.BannerInf).Methods("GET").Name("banner_inf1")
+	r.Handle("/api/banner_inf", h.BannerInf2).Methods("GET").Name("banner_inf")
 	r.Handle("/api/property_cfg", h.PropertyCfg).Methods("GET").Name("property_cfg")
 	r.Handle("/api/property_result", h.PropertyResult).Methods("POST").Name("property_result")
 }

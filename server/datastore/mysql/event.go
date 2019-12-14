@@ -308,6 +308,28 @@ func (d* Datastore) EventDetails(uid, event_id string) (*kolide.EventDetails, er
 	content[0].IOC = ioc
 	return content[0], nil
 }
+func (d *Datastore) BannerInf2(uid string) (*kolide.BannerInf2, error) {
+
+	sqlStatement := `
+		SELECT uid, data FROM banner_inf2 
+		WHERE uid = ? order by time desc LIMIT 1
+	`
+    var content []*kolide.BannerInf2
+    err := d.db.Select(&content, sqlStatement, uid)
+    if err != nil {
+    	fmt.Println("get banner inf2 error: ", err)
+    	time.Sleep(time.Second)
+    	err = d.db.Select(&content, sqlStatement, uid)
+    	if err != nil {
+    		return nil, errors.Wrap(err, "get banner inf2")
+    	}
+	}
+	if (nil != content) && (len(content) > 0) {
+    	return content[0], nil
+	} else {
+		return nil, errors.Wrap(errors.New("no banner info found"), "get banner inf2")
+	}
+}
 
 func (d *Datastore) BannerInf(uid, host_uuid string) (*kolide.BannerInf, error) {
 
@@ -366,6 +388,7 @@ func (d *Datastore) PropertyResult(uid, host_uuid, results string, ts time.Time)
 
 	res := kolide.PropertyResult{}
 
+
 	sqlStatement := `
 	INSERT INTO banner_result(
 		uid,
@@ -381,9 +404,33 @@ func (d *Datastore) PropertyResult(uid, host_uuid, results string, ts time.Time)
 		_, err = d.db.Exec(sqlStatement, uid, host_uuid, results, ts);
 	}
 
+	if inf, err1 := kolide.ParseProperty(results); err1 == nil {
+		d.InsertBannerInf(uid, inf)		
+	} else {
+		fmt.Printf("insert into banner_inf2 err:%v\n", err1)
+	}
+
 	if err != nil {
 		res.Code = -1
 		return &res, err
 	}
 	return &res, nil;
+}
+
+func (d *Datastore)InsertBannerInf(uid, data string) error {
+
+	sqlStatement := `
+	INSERT INTO banner_inf2(
+		uid,
+		data,
+		time
+	)
+	VALUES( ?,?,? )
+	`
+	_, err := d.db.Exec(sqlStatement, uid, data, time.Now());
+	if err != nil {
+		time.Sleep(time.Second)
+		_, err = d.db.Exec(sqlStatement, uid, data, time.Now());
+	}
+	return err
 }

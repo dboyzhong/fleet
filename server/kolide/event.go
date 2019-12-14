@@ -2,6 +2,7 @@ package kolide
 import(
 	"context"
 	"time"
+	"encoding/json"
 )	
 
 type RiskMetric struct {
@@ -72,6 +73,11 @@ type BannerInf struct {
 	ScriptRes  string  `json:"script_results"  db:"script_res"`
 }
 
+type BannerInf2 struct {
+	Uid        string `json:"uid"    db:"uid"`
+	Data       json.RawMessage `json:"data"   db:"data"` 
+}
+
 type PropertyCfg struct {
 	Targets []string `json:"targets"       db:"targets"`
 	Ports   string   `json:"port"          db:"ports"`
@@ -92,6 +98,7 @@ type EventStore interface {
 	EventHistory(uid, sort string, start, end, level, status int64) ([]*EventHistory, error)
 	EventDetails(uid, event_id string) (*EventDetails, error)
 	BannerInf(uid, host_uuid string) (*BannerInf, error)
+	BannerInf2(uid string) (*BannerInf2, error)
 	PropertyCfg(uid string) (*PropertyCfg, error)
 	PropertyResult(uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
 	GetEventEmailCfg(uid string) (*SmtpConfig, error)
@@ -103,6 +110,7 @@ type EventService interface {
 	EventHistory(ctx context.Context, uid, sort string, start, end, level, status int64) ([]*EventHistory, error)
 	EventDetails(ctx context.Context, uid, event_id string) (*EventDetails, error)
 	BannerInf(ctx context.Context, uid, host_uuid string) (*BannerInf, error)
+	BannerInf2(ctx context.Context, uid string) (*BannerInf2, error)
 	PropertyCfg(ctx context.Context, uid string) (*PropertyCfg, error)
 	PropertyResult(ctx context.Context, uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
 }
