@@ -63,7 +63,7 @@ type PropertyOrigin struct {
 	Hosts []*PropertyHost `json:"hosts"`
 }
 
-func ParseProperty(origin string) (string, error) {
+func ParseProperty(origin, hostname string) (string, error) {
 
 	var err error
 	var propertyOrigin PropertyOrigin
@@ -79,10 +79,11 @@ func ParseProperty(origin string) (string, error) {
 
 	for _, v := range(propertyOrigin.Hosts) {
 
-		hostnames := v.Hostnames
-		if (v.Hostnames == nil) {
-			hostnames = make([]*HostnameType, 0)
+		hostnames := make([]*HostnameType, 0)
+		hn := &HostnameType{
+			Name: hostname,
 		}
+		hostnames = append(hostnames, hn)
 
 		osMatches := v.Os.OsMatches
 		if (v.Os.OsMatches == nil) {

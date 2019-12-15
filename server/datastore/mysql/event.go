@@ -404,7 +404,7 @@ func (d *Datastore) PropertyResult(uid, host_uuid, results string, ts time.Time)
 		_, err = d.db.Exec(sqlStatement, uid, host_uuid, results, ts);
 	}
 
-	if inf, err1 := kolide.ParseProperty(results); err1 == nil {
+	if inf, err1 := kolide.ParseProperty(results, host_uuid); err1 == nil {
 		d.InsertBannerInf(uid, inf)		
 	} else {
 		fmt.Printf("insert into banner_inf2 err:%v\n", err1)
