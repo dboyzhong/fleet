@@ -62,12 +62,12 @@ type eventBannerInf2Request struct {
 }
 
 type eventBannerInfResponse struct {
-	BannerInf *kolide.BannerInf `json:"banner_inf ,omitempty"`
+	BannerInf *kolide.BannerInf `json:"banner_inf,omitempty"`
 	Err    error    `json:"error,omitempty"`
 }
 
 type eventBannerInf2Response struct {
-	BannerInf2 *kolide.BannerInf2 `json:"banner_inf ,omitempty"`
+	BannerInf2 *kolide.BannerInf2 `json:"banner_inf,omitempty"`
 	Err        error             `json:"error,omitempty"`
 }
 
