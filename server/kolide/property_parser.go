@@ -5,6 +5,7 @@ import(
 	"encoding/json"
 	_"fmt"
 	"errors"
+	"strings"
 )
 
 type HostnameType struct {
@@ -25,11 +26,23 @@ type PService struct {
 	Version     string `json:"version"`
 	HRef        string `json:"href"`       
 	CPes        []string `json:"cpes"`
+	Fp          string   `json:"service_fp"`
+}
+
+type StateData struct {
+	State string `json:"state"`
+}
+
+type ServicesPort struct {
+	Id         int `json:"id"` 
+	Services   PService  `json:"services"`
 }
 
 type ServicePort struct {
 	Id         int `json:"id"` 
-	Services   PService `json:"services"`
+	Services   PService  `json:"service"`
+	State      StateData `json:"state,omitempty"`
+	Status     StateData `json:"status,omitempty"`
 }
 
 type PropertyParsed struct {
@@ -37,8 +50,8 @@ type PropertyParsed struct {
 	OsMatches []*OsMatch      `json:"os_matches"`
 	Time      time.Time       `json:"time"`
 	Address   string          `json:"address"`
-	//Ports     []*ServicePort  `json:"ports"`
-	Ports     json.RawMessage  `json:"ports"`
+	Ports     []*ServicesPort  `json:"ports"`
+	//Ports     json.RawMessage  `json:"ports"`
 }
 
 /////////////////////////////
@@ -55,7 +68,7 @@ type PropertyHost struct {
 	Os     PropertyOs  `json:"os"`
 	Address    []*PropertyAddr `json:"addresses"` 
 	Hostnames  []*HostnameType `json:"hostnames"`
-	Ports      json.RawMessage `json:"ports"`
+	Ports      []*ServicePort  `json:"ports"`
 	OsFp   *string     `json:"os_fingerprints"`
 }
 
@@ -97,7 +110,51 @@ func ParseProperty(origin, hostname string) (string, error) {
 
 		ports := v.Ports
 		if (v.Ports == nil) {
-			ports = make(json.RawMessage, 0)
+			ports = make([]*ServicePort, 0)
+		}
+
+		parsedPorts := make([]*ServicesPort, 0)
+
+		for _, p := range ports {
+
+			pP := &ServicesPort{}
+			pP.Id = p.Id
+			if p.Services.CPes == nil {
+				pP.Services.CPes = make([]string, 0)
+			} else {
+				pP.Services.CPes = p.Services.CPes
+			}
+			pP.Services.Fp = p.Services.Fp
+			pP.Services.Product = p.Services.Product
+			pP.Services.Version = p.Services.Version
+
+			if p.State.State == "open" || p.Status.State == "up" {
+				pP.Services.State = "online"
+			} else {
+				pP.Services.State = "offline"
+			}
+			var ns string
+			idx := strings.Index(p.Services.Fp, "nServer")
+			if idx != -1 {
+				nst := p.Services.Fp[idx + len("nServer"):]
+				idx = strings.Index(nst, "\\r")
+				if idx != -1 {
+					ns = nst[:idx]
+				}
+			}
+			pP.Services.NServer = ns	
+
+			ns = ""
+			idx = strings.Index(p.Services.Fp, "href")
+			if idx != -1 {
+				nst := p.Services.Fp[idx + len("href"):]
+				idx = strings.Index(nst, "\\r")
+				if idx != -1 {
+					ns = nst[:idx]
+				}
+			}
+			pP.Services.HRef = ns
+			parsedPorts = append(parsedPorts, pP)
 		}
 
 		pParsed := &PropertyParsed{
@@ -105,7 +162,7 @@ func ParseProperty(origin, hostname string) (string, error) {
 			OsMatches : osMatches,
 			Time      : time.Now(),
 			Address   : addr,
-			Ports     : ports,
+			Ports     : parsedPorts,
 		}
 
 		propertyParsed = append(propertyParsed, pParsed)

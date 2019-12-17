@@ -312,7 +312,7 @@ func (d *Datastore) BannerInf2(uid string) (*kolide.BannerInf2, error) {
 
 	sqlStatement := `
 		SELECT uid, data FROM banner_inf2 
-		WHERE uid = ? order by time desc LIMIT 1
+		WHERE uid = ? order by id desc LIMIT 1
 	`
     var content []*kolide.BannerInf2
     err := d.db.Select(&content, sqlStatement, uid)
