@@ -108,6 +108,7 @@ type FilesystemConfig struct {
 type EventConfig struct {
 	JPushID     string `yaml:"jpush_id"`
 	JPushKey    string `yaml:"jpush_key"`
+	SmtpTempl   string `yaml:"smtp_templ"`
 }
 
 // KolideConfig stores the application configuration. Each subcategory is
@@ -239,6 +240,7 @@ func (man Manager) addConfigs() {
 	//Event
 	man.addConfigString("event.jpush_id", "", "jpush id")
 	man.addConfigString("event.jpush_key", "", "jpush key")
+	man.addConfigString("event.smtp_templ", "./event_template.html", "smtp template")
 }
 
 // LoadConfig will load the config variables into a fully initialized
@@ -313,6 +315,7 @@ func (man Manager) LoadConfig() KolideConfig {
 		Event: EventConfig{
 			JPushID:     man.getConfigString("event.jpush_id"),
 			JPushKey:    man.getConfigString("event.jpush_key"),
+			SmtpTempl:   man.getConfigString("event.smtp_templ"),
 		},
 	}
 }

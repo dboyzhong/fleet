@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"fmt"
 	"io/ioutil"
+	"strings"
 )
 
 type rulesEngine struct {
@@ -142,6 +143,7 @@ type eventMiddleware struct {
 	startSeq int64
 	smtpCfg map[string]*kolide.SmtpConfig
 	smtpTicker  *time.Ticker
+	smtpTempl   string
 }
 
 func (ew eventMiddleware) sendEmails(uid string, msg string) {
@@ -165,9 +167,35 @@ func (ew eventMiddleware) sendEmails(uid string, msg string) {
 	}
 }
 
+func (ew eventMiddleware) formatTempl(templ string, a *kolide.Alarm) []string {
+
+	alarms := make([]string, 0)
+	for _, alarm := range a.Data {
+		templ = strings.Replace(templ, "fleet-title", alarm.Title, 0)
+		templ = strings.Replace(templ, "fleet-hostname", alarm.RemoteIp, 0)
+		templ = strings.Replace(templ, "fleet-time", alarm.CreateTime.Format("2006-01-02 15:04:05"), 0)
+		templ = strings.Replace(templ, "fleet-details", alarm.Details, 0)
+		templ = strings.Replace(templ, "fleet-ip", alarm.AttackIp, 0)
+		templ = strings.Replace(templ, "fleet-region", alarm.AttackRegion, 0)
+		templ = strings.Replace(templ, "fleet-ioc", alarm.IOC, 0)
+		alarms = append(alarms, templ)
+	}
+	return alarms
+}
+
 func (ew eventMiddleware) push(a *kolide.Alarm) error {
 
+	emsgs := make([]string, 0)
 	msg, _ := json.Marshal(a)
+
+	emsgTempl, err := ioutil.ReadFile(ew.smtpTempl) 
+	if err != nil {
+		ew.logger.Log("push event : ", a.Uid, "format template err: ", err)
+		emsgs = append(emsgs, string(msg))
+	} else {
+		emsgs = ew.formatTempl(string(emsgTempl), a)
+	}
+
 	audience := push.NewAudience() 
 	audience.SetAlias([]string{a.Uid})
 	var titleContent string
@@ -201,13 +229,15 @@ func (ew eventMiddleware) push(a *kolide.Alarm) error {
 		ew.logger.Log("err", "push success: ", result)
 	}
 
-	ew.sendEmails(a.Uid, string(msg))
+	for _, m := range(emsgs) {
+		ew.sendEmails(a.Uid, m)
+	}
 	return err
 }
 
 // NewLoggingService takes an existing service and adds a logging wrapper
 func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logger, 
-	bs *pubsub.BashResults, jpushID, jpushKey string) kolide.Service {
+	bs *pubsub.BashResults, jpushID, jpushKey string, smtpTempl string) kolide.Service {
 
 	s := eventMiddleware{
 		Service: svc,
@@ -221,6 +251,7 @@ func NewEventService(svc kolide.Service, ds kolide.Datastore, logger kitlog.Logg
 		startSeq: time.Now().Unix(),
 		smtpCfg : make(map[string]*kolide.SmtpConfig),
 		smtpTicker : time.NewTicker(10 * time.Minute),
+		smtpTempl  : smtpTempl,
 	}
 	s.pf.Add("ios", "android")
 	s.jclient.SetDebug(true)
