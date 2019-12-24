@@ -37,7 +37,7 @@ func (ec *SmtpClient) generateEmailMsg(toUser []string, subject, content string)
 }
 
 func (ec *SmtpClient) generateEmailMsgByte(toUser []string, subject string, body []byte) []byte {
-	msgStr := fmt.Sprintf("To: %s\r\nFrom: %s<%s>\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n",
+	msgStr := fmt.Sprintf("To: %s\r\nFrom: %s<%s>\r\nSubject: %s\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n",
 		strings.Join(toUser, ","), ec.nickName, ec.user, subject)
 	return append([]byte(msgStr), body...)
 }
