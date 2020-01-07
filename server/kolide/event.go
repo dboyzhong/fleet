@@ -82,6 +82,11 @@ type PropertyCfg struct {
 	Targets []string `json:"targets"       db:"targets"`
 	Ports   string   `json:"port"          db:"ports"`
 	Args    []string `json:"args"          db:"args"`
+	RTSPTargets []string `json:"rtsp_targets"   db:"rtsp_targets"`
+	RTSPPorts   []string `json:"rtsp_ports"     db:"rtsp_ports"`
+	RTSPCredentials string `json:"rtsp_credentials"  db:"rtsp_credentials"`
+	RTSPRoutes    []string `json:"rtsp_routes"       db:"rtsp_routes"`
+	RTSPScanSpeed   int    `json:"rtsp_scan_speed"   db:"rtsp_scan_speed"`
 }
 
 type PropertyResult struct {

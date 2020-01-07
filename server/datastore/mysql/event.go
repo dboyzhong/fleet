@@ -37,7 +37,12 @@ type PropertyCfgDB struct {
 	Targets string `db:"targets"`
 	Ports   string `db:"ports"`
 	Args    string `db:"args"`
-}		
+	RTSPTargets string `db:"rtsp_targets"`
+	RTSPPorts   string `db:"rtsp_ports"`
+	RTSPCredentials string `db:"rtsp_credentials"`
+	RTSPRoutes      string `db:"rtsp_routes"`
+	RTSPScanSpeed   int    `db:"rtsp_scan_speed"`
+}
 
 func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, alarm string, level, status int) (error) {
 	sqlStatement := `
@@ -358,7 +363,8 @@ func (d *Datastore) BannerInf(uid, host_uuid string) (*kolide.BannerInf, error) 
 func (d *Datastore) PropertyCfg(uid string) (*kolide.PropertyCfg, error) {
 
 	sqlStatement := `
-		SELECT targets, ports, args FROM banner_cfg 
+		SELECT targets, ports, args, rtsp_targets, rtsp_ports, rtsp_credentials,
+		rtsp_routes, rtsp_scan_speed FROM banner_cfg 
 		WHERE uid = ? LIMIT 1
 	`
     var content []*PropertyCfgDB
@@ -378,6 +384,11 @@ func (d *Datastore) PropertyCfg(uid string) (*kolide.PropertyCfg, error) {
 		ret.Targets = strings.Split(content[0].Targets, ",")
 		ret.Ports = content[0].Ports
 		ret.Args = strings.Split(content[0].Args, ",")
+		ret.RTSPTargets = strings.Split(content[0].RTSPTargets, ",")
+		ret.RTSPPorts   = strings.Split(content[0].RTSPPorts, ",")
+		ret.RTSPCredentials = content[0].RTSPCredentials
+		ret.RTSPRoutes = strings.Split(content[0].RTSPRoutes, ",")
+		ret.RTSPScanSpeed = content[0].RTSPScanSpeed
 		return &ret, nil
 	} else {
 		return nil, errors.Wrap(errors.New("no banner info found"), "get banner inf")
