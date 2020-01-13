@@ -92,7 +92,35 @@ type eventPropertyResultResponse struct {
 	Err    error    `json:"error,omitempty"`
 }
 
+type RTSPStream struct {
+	Device   string `json:"device"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Route    string `json:"route"`
+	Address  string `json:"address" validate:"required"`
+	Port     uint16 `json:"port" validate:"required"`
+
+	CredentialsFound bool `json:"credentials_found"`
+	RouteFound       bool `json:"route_found"`
+	Available        bool `json:"available"`
+
+	AuthenticationType int `json:"authentication_type"`
+}
+
+type eventPropertyRTSPResultRequest struct {
+	Uid string       `json:"uid"`
+	HostUUID string  `json:"host_uuid"`
+	Streams string   `json:"streams"`
+	Ts   time.Time   `json:"ts"`
+}
+
+type eventPropertyRTSPResultResponse struct {
+	Err    error    `json:"error,omitempty"`
+}
+
 func (r eventPropertyCfgResponse) error() error { return r.Err }
+
+func (r eventPropertyRTSPResultResponse) error() error { return r.Err }
 
 func (r eventBannerInfResponse) error() error { return r.Err }
 
@@ -185,5 +213,13 @@ func makePropertyResultEndpoint(svc kolide.Service) endpoint.Endpoint {
 			return eventPropertyResultResponse{Err: err}, nil
 		}
 		return eventPropertyResultResponse{PropertyResult: result, Err:nil}, nil
+	}
+}
+
+func makePropertyRTSPResultEndpoint(svc kolide.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(eventPropertyRTSPResultRequest)
+		err := svc.RTSPPropertyResult(ctx, req.Uid, req.HostUUID, req.Streams, req.Ts)
+		return eventPropertyRTSPResultResponse{Err:err}, nil
 	}
 }

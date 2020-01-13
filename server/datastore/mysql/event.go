@@ -428,6 +428,26 @@ func (d *Datastore) PropertyResult(uid, host_uuid, results string, ts time.Time)
 	return &res, nil;
 }
 
+func (d *Datastore) RTSPPropertyResult(uid, host_uuid, streams string, ts time.Time) (error) {
+
+	sqlStatement := `
+	INSERT INTO banner_rtsp_result(
+		uid,
+		host_uuid,
+		streams,
+		time
+	)
+	VALUES( ?,?,?,? )
+	`
+	_, err := d.db.Exec(sqlStatement, uid, host_uuid, streams, ts);
+	if err != nil {
+		time.Sleep(time.Second)
+		_, err = d.db.Exec(sqlStatement, uid, host_uuid, streams, ts);
+	}
+
+	return err
+}
+
 func (d *Datastore)InsertBannerInf(uid, data string) error {
 
 	sqlStatement := `

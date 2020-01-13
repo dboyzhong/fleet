@@ -363,6 +363,24 @@ func decodePropertyResult(ctx context.Context, r *http.Request) (interface{}, er
 	return req, nil
 }
 
+func decodePropertyRTSPResult(ctx context.Context, r *http.Request) (interface{}, error) {
+
+	defer r.Body.Close()
+	res, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	req := eventPropertyRTSPResultRequest{}
+	err = json.Unmarshal(res, &req)
+	if err != nil {
+		//return nil, errors.New("wrong param")
+		return nil, err
+	}
+
+	return req, nil
+}
+
 
 func (ew eventMiddleware) AlarmRoutine() {
 	for {

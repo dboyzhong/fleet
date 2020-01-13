@@ -36,3 +36,7 @@ func (svc service) PropertyCfg(ctx context.Context, uid string) (*kolide.Propert
 func (svc service) PropertyResult(ctx context.Context, uid, host_uuid, results string, ts time.Time) (*kolide.PropertyResult, error) {
 	return svc.ds.PropertyResult(uid, host_uuid, results, ts)
 }
+
+func (svc service) RTSPPropertyResult(ctx context.Context, uid, host_uuid, streams string, ts time.Time) (error) {
+	return svc.ds.RTSPPropertyResult(uid, host_uuid, streams, ts)
+}

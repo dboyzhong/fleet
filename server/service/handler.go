@@ -106,6 +106,7 @@ type KolideEndpoints struct {
 	BannerInf2                            endpoint.Endpoint
 	PropertyCfg                           endpoint.Endpoint
 	PropertyResult                        endpoint.Endpoint
+	PropertyRTSPResult                    endpoint.Endpoint
 }
 
 // MakeKolideServerEndpoints creates the Kolide API endpoints.
@@ -215,6 +216,7 @@ func MakeKolideServerEndpoints(svc kolide.Service, jwtKey string) KolideEndpoint
 		BannerInf2:                    makeEventBannerInf2Endpoint(svc),
 		PropertyCfg:                   makePropertyCfgEndpoint(svc),
 		PropertyResult:                makePropertyResultEndpoint(svc),
+		PropertyRTSPResult:            makePropertyRTSPResultEndpoint(svc),
 	}
 }
 
@@ -310,6 +312,7 @@ type kolideHandlers struct {
 	BannerInf2                            http.Handler
 	PropertyCfg                           http.Handler
 	PropertyResult                        http.Handler
+	PropertyRTSPResult                    http.Handler
 }
 
 func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *kolideHandlers {
@@ -409,6 +412,7 @@ func makeKolideKitHandlers(e KolideEndpoints, opts []kithttp.ServerOption) *koli
 		BannerInf2:                            newServer(e.BannerInf2, decodeEventBannerInf2),
 		PropertyCfg:                           newServer(e.PropertyCfg, decodePropertyCfg),
 		PropertyResult:                        newServer(e.PropertyResult, decodePropertyResult),
+		PropertyRTSPResult:                    newServer(e.PropertyRTSPResult, decodePropertyRTSPResult),
 	}
 }
 
@@ -554,6 +558,7 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/banner_inf", h.BannerInf2).Methods("GET").Name("banner_inf")
 	r.Handle("/api/property_cfg", h.PropertyCfg).Methods("GET").Name("property_cfg")
 	r.Handle("/api/property_result", h.PropertyResult).Methods("POST").Name("property_result")
+	r.Handle("/api/property_rtsp_result", h.PropertyResult).Methods("POST").Name("property_rtsp_result")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.

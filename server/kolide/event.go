@@ -93,6 +93,10 @@ type PropertyResult struct {
 	Code int `json:"code"`
 }
 
+type RTSPPropertyResult struct {
+	Code int `json:"code"`
+}
+
 type EventDetails EventHistory
 
 type EventStore interface {
@@ -107,6 +111,7 @@ type EventStore interface {
 	PropertyCfg(uid string) (*PropertyCfg, error)
 	PropertyResult(uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
 	GetEventEmailCfg(uid string) (*SmtpConfig, error)
+	RTSPPropertyResult(uid, host_uuid, streams string, ts time.Time) (error)
 }
 
 type EventService interface {
@@ -118,4 +123,5 @@ type EventService interface {
 	BannerInf2(ctx context.Context, uid string) (*BannerInf2, error)
 	PropertyCfg(ctx context.Context, uid string) (*PropertyCfg, error)
 	PropertyResult(ctx context.Context, uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
+	RTSPPropertyResult(ctx context.Context, uid, host_uuid, streams string, ts time.Time) (error)
 }
