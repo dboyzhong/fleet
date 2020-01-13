@@ -558,7 +558,7 @@ func attachKolideAPIRoutes(r *mux.Router, h *kolideHandlers) {
 	r.Handle("/api/banner_inf", h.BannerInf2).Methods("GET").Name("banner_inf")
 	r.Handle("/api/property_cfg", h.PropertyCfg).Methods("GET").Name("property_cfg")
 	r.Handle("/api/property_result", h.PropertyResult).Methods("POST").Name("property_result")
-	r.Handle("/api/property_rtsp_result", h.PropertyResult).Methods("POST").Name("property_rtsp_result")
+	r.Handle("/api/property_rtsp_result", h.PropertyRTSPResult).Methods("POST").Name("property_rtsp_result")
 }
 
 // WithSetup is an http middleware that checks is setup procedures have been completed.
