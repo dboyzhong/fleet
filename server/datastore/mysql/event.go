@@ -428,24 +428,73 @@ func (d *Datastore) PropertyResult(uid, host_uuid, results string, ts time.Time)
 	return &res, nil;
 }
 
+var(
+	rtspSeq int64
+)
+
+type RtspStream struct {
+	Device   string `json:"device"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Route    string `json:"route"`
+	Address  string `json:"address" validate:"required"`
+	Port     uint16 `json:"port" validate:"required"`
+
+	CredentialsFound bool `json:"credentials_found"`
+	RouteFound       bool `json:"route_found"`
+	Available        bool `json:"available"`
+
+	AuthenticationType int `json:"authentication_type"`
+}
+
 func (d *Datastore) RTSPPropertyResult(uid, host_uuid, streams string, ts time.Time) (error) {
 
-	sqlStatement := `
-	INSERT INTO banner_rtsp_result(
-		uid,
-		host_uuid,
-		streams,
-		time
-	)
-	VALUES( ?,?,?,? )
-	`
-	_, err := d.db.Exec(sqlStatement, uid, host_uuid, streams, ts);
-	if err != nil {
-		time.Sleep(time.Second)
-		_, err = d.db.Exec(sqlStatement, uid, host_uuid, streams, ts);
+	var rs []RtspStream
+	if err := json.Unmarshal([]byte(streams), &rs); err != nil {
+		return err
 	}
 
-	return err
+	if (rs != nil) && (len(rs) > 0) {
+		for _, stream := range rs {
+			sqlStatement := `
+			INSERT INTO banner_rtsp_result(
+				uid,
+				host_uuid,
+				streams,
+				seq,
+				available,
+				dev_rtsp_url,
+				ip_address,
+				rtsp_port,
+				username,
+				password,
+				rtsp_route,
+				device_type,
+				time
+			)
+			VALUES( ?,?,?,?,?,?,?,?,?,?,?,?,? )
+			`
+			aval := 0
+			if stream.Available {
+				aval = 1
+			}
+			_, err := d.db.Exec(sqlStatement, uid, host_uuid, "", 
+				rtspSeq, aval, 
+				stream.Route, stream.Address, stream.Port,
+				stream.Username, stream.Password, 
+				stream.Route, stream.Device, ts);
+			if err != nil {
+				time.Sleep(time.Second)
+				d.db.Exec(sqlStatement, uid, host_uuid, "", 
+					rtspSeq, aval, 
+					stream.Route, stream.Address, stream.Port,
+					stream.Username, stream.Password, 
+					stream.Route, stream.Device, ts);
+			}
+		}
+	}
+	rtspSeq += 1
+	return nil
 }
 
 func (d *Datastore)InsertBannerInf(uid, data string) error {
