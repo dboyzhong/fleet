@@ -514,3 +514,7 @@ func (d *Datastore)InsertBannerInf(uid, data string) error {
 	}
 	return err
 }
+
+func init() {
+	rtspSeq = time.Now().UnixNano()
+}

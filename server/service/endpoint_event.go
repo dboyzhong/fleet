@@ -110,7 +110,7 @@ type RTSPStream struct {
 type eventPropertyRTSPResultRequest struct {
 	Uid string       `json:"uid"`
 	HostUUID string  `json:"host_uuid"`
-	Streams string   `json:"streams"`
+	Streams json.RawMessage `json:"streams"`
 	Ts   time.Time   `json:"ts"`
 }
 
@@ -219,7 +219,7 @@ func makePropertyResultEndpoint(svc kolide.Service) endpoint.Endpoint {
 func makePropertyRTSPResultEndpoint(svc kolide.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(eventPropertyRTSPResultRequest)
-		err := svc.RTSPPropertyResult(ctx, req.Uid, req.HostUUID, req.Streams, req.Ts)
+		err := svc.RTSPPropertyResult(ctx, req.Uid, req.HostUUID, string(req.Streams), req.Ts)
 		return eventPropertyRTSPResultResponse{Err:err}, nil
 	}
 }
