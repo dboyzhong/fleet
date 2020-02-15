@@ -66,6 +66,25 @@ func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, a
 	return err;
 }
 
+func (d* Datastore)	NewAssocEvent(uid, eventId, platform, hostname, record string, ts time.Time) error {
+	sqlStatement := `
+	INSERT INTO event (
+		uid,
+		event_id,
+		hostname,
+		assoc_history,
+		time
+	)
+	VALUES( ?,?,?,?,? )
+	`
+	_, err := d.db.Exec(sqlStatement, uid, eventId, hostname, record, time.Now());
+	if err != nil {
+		time.Sleep(time.Second)
+		_, err = d.db.Exec(sqlStatement, uid, eventId, hostname, record, time.Now());
+	}
+	return err;
+}
+
 func (d* Datastore) GetRiskMetric(uid string) (*kolide.RiskMetric, error) {
 
 	sqlStatement := `

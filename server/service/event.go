@@ -23,6 +23,7 @@ import (
 type rulesEngine struct {
 	ctx context.Context
 	eventChan chan *kolide.Alarm
+	assocEventChan chan *kolide.Alarm
 	msgChan chan []json.RawMessage
 	bs  *pubsub.BashResults
 	logger kitlog.Logger
@@ -33,6 +34,7 @@ func newRulesEngine(ctx context.Context, bs *pubsub.BashResults, logger kitlog.L
 	ret := &rulesEngine {
 		ctx: ctx,
 		eventChan : make(chan *kolide.Alarm, 100),
+		assocEventChan : make(chan *kolide.Alarm, 100),
 		msgChan   : make(chan []json.RawMessage),
 		bs        : bs,
 		logger    :logger,
@@ -48,11 +50,27 @@ func newRulesEngine(ctx context.Context, bs *pubsub.BashResults, logger kitlog.L
 			ret.eventChan <- msg
 		}
 	}()
+
+	go func() {
+		defer close(ret.eventChan)
+		for {
+			msg, err := ret.subscribeAssocEvent(ret.ctx)
+			if(err != nil) {
+				return
+			}
+			ret.assocEventChan <- msg
+		}
+	}()
+
 	return ret;
 }
 
 func (re *rulesEngine) AlarmChannel() <-chan *kolide.Alarm {
 	return re.eventChan
+}
+
+func (re *rulesEngine) AssocEventChannel() <-chan *kolide.Alarm {
+	return re.assocEventChan
 }
 
 func (re *rulesEngine) sendEvent(msg []json.RawMessage) error {
@@ -62,6 +80,33 @@ func (re *rulesEngine) sendEvent(msg []json.RawMessage) error {
 		return err
 	}
 	return nil
+}
+
+func (re *rulesEngine) subscribeAssocEvent(ctx context.Context) (*kolide.Alarm, error) {
+	//msg := <- re.msgChan
+	var alarmMsg []byte
+	var alarm = &kolide.Alarm{}
+	msgCh, _:= re.bs.ReadAssocChannel(ctx)
+
+	msg, ok := <- msgCh
+	re.logger.Log("log", "rule engine got assoc_event result: ", msg);
+	fmt.Println("log", "rule engine got assoc_event result: ", msg);
+
+	if !ok {
+		re.logger.Log("subscribe assoc_alarm : ", "bash store read channel canncelled");
+		return nil, errors.New("bash store read channel canncelled") 
+	}
+
+	if alarmMsg, ok = msg.([]byte); !ok {
+		re.logger.Log("subscribe assoc_alarm : ", "bash store read channel msg not []byte type");
+		return nil, errors.New("bash store read channel msg not []byte type") 
+	} 
+
+	if err := json.Unmarshal(alarmMsg, alarm); err != nil {
+		re.logger.Log("subscribe assoc_alarm : ", "bash store json failed : %v", err);
+		return nil, fmt.Errorf("bash store json failed: %v", err)
+	}
+	return alarm, nil
 }
 
 func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error) {
@@ -427,6 +472,12 @@ func (ew eventMiddleware) AlarmRoutine() {
 					ew.logger.Log("info", "smtp ticker load event cfg error, uid: ", v.Uid, "err: ", err)
 				}
 			}
+		case assoc_event, ok := <-ew.re.AssocEventChannel():
+			if ok {
+				ew.saveAssocEvent(assoc_event)
+			} else {
+				ew.logger.Log("error", "save assoc_event err: channel closed")
+			}
 		}
 	}
 }
@@ -442,6 +493,19 @@ func (ew eventMiddleware) save(a *kolide.Alarm, status int) error {
 	for _, v := range a.Data {
 		AlarmString, _:= json.Marshal(v)
 		ew.ds.NewEvent(a.Uid, v.EventId, a.Platform, a.Hostname, a.Content, string(AlarmString), v.Level, status)	
+	}
+	return nil
+}
+
+func (ew eventMiddleware) saveAssocEvent(a *kolide.Alarm) error {
+	for _, v := range a.Data {
+		for _, record := range a.HistoryEvents {
+			AssocString, _ := json.Marshal(record)
+			err := ew.ds.NewAssocEvent(a.Uid, a.Platform, v.EventId, a.Hostname, string(AssocString), time.Now())
+			if err != nil {
+				ew.logger.Log("error", "new assoc_event error: ", err)
+			}
+		}
 	}
 	return nil
 }

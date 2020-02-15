@@ -24,11 +24,31 @@ type AlarmData struct {
 	Details string       `json:"details"`
 }
 
+type AssocDecorations struct {
+	HostUUID string `json:"host_uuid"`
+	HostName string `json:"hostname"`
+}
+
+type AssocEvent struct {
+	Name           string           `json:"name"`
+	HostIdentifier string           `json:"hostIdentifier"`
+	Uid            string           `json:"uid"`
+	CalendarTime   string           `json:"calendarTime"`
+	UnixTime       int64            `json:"unixTime"`
+	Epoch          int64            `json:"epoch"`
+	Counter        int64            `json:"counter"`
+	Dec            AssocDecorations `json:"decorations"`
+	Columns        json.RawMessage  `json:"columns"`
+	SnapShot       json.RawMessage  `json:"snapshot"`
+}
+
 type Alarm struct {
 	Uid      string       `json:"uid" db:"uid"`
 	Platform string       `json:"platform" db:"platform"`
 	Hostname string       `json:"hostname" db:"hostname"`
 	Data     []*AlarmData `json:"data" db:"-"`
+	SrcEvent      *AssocEvent       `json:"src_event,omitempty"`
+	HistoryEvents []*AssocEvent     `json:"history_events,omitempty"`
 	EventId  string       `json:"-" db:"event_id"`
 	Content  string       `json:"-" db:"content"`
 	DataDB   string       `json:"-" db:"alarm"`
@@ -112,6 +132,7 @@ type EventStore interface {
 	PropertyResult(uid, host_uuid, result string, ts time.Time) (*PropertyResult, error)
 	GetEventEmailCfg(uid string) (*SmtpConfig, error)
 	RTSPPropertyResult(uid, host_uuid, streams string, ts time.Time) (error)
+	NewAssocEvent(uid, eventId, platform, hostname, record string, ts time.Time) error
 }
 
 type EventService interface {

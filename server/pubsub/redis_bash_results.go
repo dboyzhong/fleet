@@ -11,6 +11,7 @@ import (
 
 const bashTopic = "logs_topic"
 const bashResult = "logs_result"
+const assocTopic = "assoc_event"
 
 type BashResults struct {
 	// connection pool
@@ -43,6 +44,50 @@ func (b *BashResults) ReadChannel(ctx context.Context) (<-chan interface{}, erro
 
 	conn := redis.PubSubConn{Conn: b.pool.Get()}
 	conn.Subscribe(bashResult)
+	msgChannel := make(chan interface{})
+	// Run a separate goroutine feeding redis messages into
+	// msgChannel
+	go receiveMessages(&conn, msgChannel)
+
+	go func() {
+		defer close(outChannel)
+		defer conn.Close()
+
+		for {
+			// Loop reading messages from conn.Receive() (via
+			// msgChannel) until the context is cancelled.
+			select {
+			case msg, ok := <-msgChannel:
+				if !ok {
+					conn.Close()
+					time.Sleep(10 * time.Second)
+					msgChannel = make(chan interface{})
+					conn = redis.PubSubConn{Conn: b.pool.Get()}
+					conn.Subscribe(bashResult)
+					go receiveMessages(&conn, msgChannel)
+				}
+				switch msg := msg.(type) {
+				case redis.Message:
+					outChannel <- msg.Data
+				case error:
+					outChannel <- errors.Wrap(msg, "reading from redis")
+				}
+
+			case <-ctx.Done():
+				conn.Unsubscribe()
+
+			}
+		}
+
+	}()
+	return outChannel, nil
+}
+
+func (b *BashResults) ReadAssocChannel(ctx context.Context) (<-chan interface{}, error) {
+	outChannel := make(chan interface{})
+
+	conn := redis.PubSubConn{Conn: b.pool.Get()}
+	conn.Subscribe(assocTopic)
 	msgChannel := make(chan interface{})
 	// Run a separate goroutine feeding redis messages into
 	// msgChannel
