@@ -492,6 +492,7 @@ func (ew eventMiddleware) update(a *kolide.Alarm, status int) error {
 func (ew eventMiddleware) save(a *kolide.Alarm, status int) error {
 	for _, v := range a.Data {
 		AlarmString, _:= json.Marshal(v)
+		a.Content = string(a.SrcEvent.Columns)
 		ew.ds.NewEvent(a.Uid, v.EventId, a.Platform, a.Hostname, a.Content, string(AlarmString), v.Level, status)	
 	}
 	return nil
