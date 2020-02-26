@@ -43,7 +43,7 @@ func (b *BashResults) ReadChannel(ctx context.Context) (<-chan interface{}, erro
 	outChannel := make(chan interface{})
 
 	conn := redis.PubSubConn{Conn: b.pool.Get()}
-	conn.Subscribe(bashResult)
+	conn.Subscribe(assocTopic)
 	msgChannel := make(chan interface{})
 	// Run a separate goroutine feeding redis messages into
 	// msgChannel
@@ -63,7 +63,7 @@ func (b *BashResults) ReadChannel(ctx context.Context) (<-chan interface{}, erro
 					time.Sleep(10 * time.Second)
 					msgChannel = make(chan interface{})
 					conn = redis.PubSubConn{Conn: b.pool.Get()}
-					conn.Subscribe(bashResult)
+					conn.Subscribe(assocTopic)
 					go receiveMessages(&conn, msgChannel)
 				}
 				switch msg := msg.(type) {
@@ -87,7 +87,7 @@ func (b *BashResults) ReadAssocChannel(ctx context.Context) (<-chan interface{},
 	outChannel := make(chan interface{})
 
 	conn := redis.PubSubConn{Conn: b.pool.Get()}
-	conn.Subscribe(assocTopic)
+	conn.Subscribe("null")
 	msgChannel := make(chan interface{})
 	// Run a separate goroutine feeding redis messages into
 	// msgChannel
@@ -107,7 +107,7 @@ func (b *BashResults) ReadAssocChannel(ctx context.Context) (<-chan interface{},
 					time.Sleep(10 * time.Second)
 					msgChannel = make(chan interface{})
 					conn = redis.PubSubConn{Conn: b.pool.Get()}
-					conn.Subscribe(bashResult)
+					conn.Subscribe("null")
 					go receiveMessages(&conn, msgChannel)
 				}
 				switch msg := msg.(type) {

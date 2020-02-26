@@ -19,7 +19,7 @@ type AlarmData struct {
 	CreateTime time.Time `json:"create_time"`
 	RemoteIp string      `json:"remote_address"`
 	AttackIp string      `json:"attack_address"`
-	AttackRegion string  `json:"attack_region"`
+	AttackRegion json.RawMessage `json:"attack_region"`
 	IOC string           `json:"ioc"`
 	Details string       `json:"details"`
 }
@@ -65,7 +65,7 @@ type EventHistory struct {
 	CreateTime time.Time  `json:"create_time" db:"-"`
 	RemoteIp string       `json:"remote_address"   db:"-"`
 	AttackIp string       `json:"attack_address"   db:"-"`
-	AttackRegion string   `json:"attack_region"    db:"-"`
+	AttackRegion json.RawMessage `json:"attack_region"    db:"-"`
 	IOC string            `json:"ioc"      db:"ioc"`
 	Details string        `json:"details"  db:"-"`
 	DataDB   string       `json:"-"        db:"alarm"`

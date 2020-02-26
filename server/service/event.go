@@ -221,7 +221,7 @@ func (ew eventMiddleware) formatTempl(templ string, a *kolide.Alarm) []string {
 		templ = strings.Replace(templ, "fleet-time", alarm.CreateTime.Format("2006-01-02 15:04:05"), -1)
 		templ = strings.Replace(templ, "fleet-details", alarm.Details, -1)
 		templ = strings.Replace(templ, "fleet-ip", alarm.AttackIp, -1)
-		templ = strings.Replace(templ, "fleet-region", alarm.AttackRegion, -1)
+		templ = strings.Replace(templ, "fleet-region", string(alarm.AttackRegion), -1)
 		templ = strings.Replace(templ, "fleet-ioc", alarm.IOC, -1)
 		alarms = append(alarms, templ)
 	}
@@ -431,6 +431,7 @@ func (ew eventMiddleware) AlarmRoutine() {
 	for {
 		select {
 		case msg, ok := <-ew.re.AlarmChannel():
+			ew.saveAssocEvent(msg)
 			alarms, err := ew.getAlarm(0)
 			if err == nil {
 				for _, v := range alarms {
