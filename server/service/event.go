@@ -116,8 +116,6 @@ func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error
 	msgCh, _:= re.bs.ReadChannel(ctx)
 
 	msg, ok := <- msgCh
-	re.logger.Log("log", "rule engine got event result: ", string(msg));
-	fmt.Println("log", "rule engine got event result: ", string(msg));
 
 	if !ok {
 		re.logger.Log("subscribe alarm : ", "bash store read channel canncelled");
@@ -128,6 +126,9 @@ func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error
 		re.logger.Log("subscribe alarm : ", "bash store read channel msg not []byte type");
 		return nil, errors.New("bash store read channel msg not []byte type") 
 	} 
+
+	re.logger.Log("log", "rule engine got event result: ", string(alarmMsg));
+	fmt.Println("log", "rule engine got event result: ", string(alarmMsg));
 
 	if err := json.Unmarshal(alarmMsg, alarm); err != nil {
 		re.logger.Log("subscribe alarm : ", "bash store json failed : %v", err);
