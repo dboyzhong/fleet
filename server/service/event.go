@@ -116,8 +116,8 @@ func (re *rulesEngine) subscribeAlarm(ctx context.Context) (*kolide.Alarm, error
 	msgCh, _:= re.bs.ReadChannel(ctx)
 
 	msg, ok := <- msgCh
-	re.logger.Log("log", "rule engine got event result: ", msg);
-	fmt.Println("log", "rule engine got event result: ", msg);
+	re.logger.Log("log", "rule engine got event result: ", string(msg));
+	fmt.Println("log", "rule engine got event result: ", string(msg));
 
 	if !ok {
 		re.logger.Log("subscribe alarm : ", "bash store read channel canncelled");
@@ -493,7 +493,9 @@ func (ew eventMiddleware) update(a *kolide.Alarm, status int) error {
 func (ew eventMiddleware) save(a *kolide.Alarm, status int) error {
 	for _, v := range a.Data {
 		AlarmString, _:= json.Marshal(v)
-		a.Content = string(a.SrcEvent.Columns)
+		if nil != a && nil != a.SrcEvent && nil != a.SrcEvent.Columns {
+			a.Content = string(a.SrcEvent.Columns)
+		}
 		ew.ds.NewEvent(a.Uid, v.EventId, a.Platform, a.Hostname, a.Content, string(AlarmString), v.Level, status)	
 	}
 	return nil
@@ -501,6 +503,9 @@ func (ew eventMiddleware) save(a *kolide.Alarm, status int) error {
 
 func (ew eventMiddleware) saveAssocEvent(a *kolide.Alarm) error {
 	for _, v := range a.Data {
+		if nil == a.HistoryEvents {
+			return nil
+		}
 		for _, record := range a.HistoryEvents {
 			AssocString, _ := json.Marshal(record)
 			err := ew.ds.NewAssocEvent(a.Uid, a.Platform, v.EventId, a.Hostname, string(AssocString), time.Now())
