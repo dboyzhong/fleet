@@ -68,7 +68,7 @@ func (d *Datastore) NewEvent(uid, eventId, platform, hostname string, content, a
 
 func (d* Datastore)	NewAssocEvent(uid, eventId, platform, hostname, record string, ts time.Time) error {
 	sqlStatement := `
-	INSERT INTO event (
+	INSERT INTO assoc_event (
 		uid,
 		event_id,
 		hostname,
