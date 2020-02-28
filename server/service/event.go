@@ -503,7 +503,7 @@ func (ew eventMiddleware) saveAssocEvent(a *kolide.Alarm) error {
 	for _, v := range a.Data {
 		for _, record := range a.HistoryEvents {
 			AssocString, _ := json.Marshal(record)
-			err := ew.ds.NewAssocEvent(a.Uid, a.Platform, v.EventId, a.Hostname, string(AssocString), time.Now())
+			err := ew.ds.NewAssocEvent(a.Uid, v.EventId, a.Platform, a.Hostname, string(AssocString), time.Now())
 			if err != nil {
 				ew.logger.Log("error", "new assoc_event error: ", err)
 			}
